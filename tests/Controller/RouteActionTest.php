@@ -41,11 +41,11 @@ class RouteActionTest extends PHPUnit_Framework_TestCase
         return [
             [(object)['controller' => 'TestController'], false],
             [(object)['controller' => 'TestController', 'action' => 'nonExistMethod'], false],
-            [(object)['controller' => 'TestController', 'action' => 'test'], false],
-            [(object)['controller' => 'TestController', 'action' => 'test', 'param2' => 'value2'], false],
-            [(object)['controller' => 'TestController', 'action' => 'test', 'param1' => 'value1'], true],
-            [(object)['controller' => 'TestController', 'action' => 'test', 'param1' => 'value1', 'param2' => 'value2'], true],
-            [(object)['controller' => 'TestController', 'action' => 'test', 'args' => ['value1', 'value2']], true]
+            [(object)['controller' => 'TestController', 'action' => 'test-run'], false],
+            [(object)['controller' => 'TestController', 'action' => 'test-run', 'param2' => 'value2'], false],
+            [(object)['controller' => 'TestController', 'action' => 'test-run', 'param1' => 'value1'], true],
+            [(object)['controller' => 'TestController', 'action' => 'test-run', 'param1' => 'value1', 'param2' => 'value2'], true],
+            [(object)['controller' => 'TestController', 'action' => 'test-run', 'args' => ['value1', 'value2']], true]
         ];
     }
 

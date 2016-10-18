@@ -19,7 +19,7 @@ class TestController extends Controller
      * @param mixed $param2
      * @return ResponseInterface
      */
-    public function testAction($param1, $param2 = 'defaultValue')
+    public function testRunAction($param1, $param2 = 'defaultValue')
     {
         $response = $this->getResponse();
 
