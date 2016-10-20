@@ -2,6 +2,7 @@
 
 namespace Jasny\Controller;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -10,26 +11,40 @@ use Psr\Http\Message\ResponseInterface;
 trait RouteAction
 {
     /**
+     * Get request, set for controller
+     *
+     * @return ServerRequestInterface
+     */
+     abstract public function getRequest();
+
+     /**
+     * Get response. set for controller
+     *
+     * @return ResponseInterface
+     */
+     abstract public function getResponse();
+
+    /**
      * Run the controller
      *
      * @return ResponseInterface
      */
     public function run() {
         $request = $this->getRequest();
-        if (!$request) {
-            throw new \RuntimeException("Request object is not set for controller");            
-        }
-
         $route = $request->getAttribute('route');
-        $method = $this->getActionMethod(isset($route->action) ? $route->action : null);
+        $method = $this->getActionMethod(isset($route->action) ? $route->action : 'default');
         
         if (!method_exists($this, $method)) {
-            throw new \RuntimeException("No method $method in conrtoller to route to");
+            return $this->setResponseError(404, 'Not Found');
         }
 
-        $args = isset($route->args) ? 
-            $route->args :
-            $this->getFunctionArgs($route, new \ReflectionMethod($this, $method));
+        try {
+            $args = isset($route->args) ? 
+                $route->args :
+                $this->getFunctionArgs($route, new \ReflectionMethod($this, $method));            
+        } catch (\RuntimeException $e) {
+            return $this->setResponseError(400, 'Bad Request');   
+        }
 
         $response = call_user_func_array([$this, $method], $args);
 
@@ -67,8 +82,8 @@ trait RouteAction
             } else {
                 if (!$param->isOptional()) {
                     $fn = $refl instanceof \ReflectionMethod
-                        ? $refl->getDeclaringClass()->getName() . ':' . $refl->getName()
-                        : $refl->getName();
+                        ? $refl->class . ':' . $refl->name
+                        : $refl->name;
 
                     throw new \RuntimeException("Missing argument '$key' for $fn()");
                 }
@@ -80,6 +95,23 @@ trait RouteAction
         }
         
         return $args;
+    }
+
+    /**
+     * Set response to error state
+     *
+     * @param int $code
+     * @param string $message 
+     * @return ResponseInterface
+     */
+    protected function setResponseError($code, $message)
+    {
+        $response = $this->getResponse();
+
+        $errorResponse = $response->withStatus($code);
+        $errorResponse->getBody()->write($message);
+
+        return $errorResponse;
     }
 }
 

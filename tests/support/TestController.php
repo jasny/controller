@@ -29,4 +29,22 @@ class TestController extends Controller
 
         return $response;
     }
+
+    /**
+     * Test action for executing router
+     *
+     * @param mixed $param1
+     * @param mixed $param2
+     * @return ResponseInterface
+     */
+    public function defaultAction($param1, $param2 = 'defaultValue')
+    {
+        $response = $this->getResponse();
+
+        $response->defaultActionCalled = true;
+        $response->param1 = $param1;
+        $response->param2 = $param2;
+
+        return $response;
+    }
 }
