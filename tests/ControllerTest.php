@@ -4,6 +4,9 @@ use Jasny\Controller;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @covers Jasny\Controller
+ */
 class ControllerTest extends PHPUnit_Framework_TestCase
 {
     /**
@@ -11,7 +14,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      */
     public function testInvoke()
     {
-        $controller = $this->getMockBuilder(Controller::class)->disableOriginalConstructor()->getMockForAbstractClass();
+        $controller = $this->getController();
         list($request, $response) = $this->getRequests();
 
         $controller->expects($this->once())->method('run')->will($this->returnValue($response));
@@ -28,7 +31,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      */
     public function testResponseStatusEmptyResponse()
     {
-        $controller = $this->getMockBuilder(Controller::class)->disableOriginalConstructor()->getMockForAbstractClass();   
+        $controller = $this->getController();   
         $data = $this->getStatusCodesMap(null);
 
         foreach ($data as $func => $value) {
@@ -44,7 +47,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      */
     public function testResponseStatus($code)
     {
-        $controller = $this->getMockBuilder(Controller::class)->disableOriginalConstructor()->getMockForAbstractClass();
+        $controller = $this->getController();
         list($request, $response) = $this->getRequests();
         $response->method('getStatusCode')->will($this->returnValue($code));
 
@@ -76,6 +79,39 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test functions that check request method
+     *
+     * @dataProvider requestMethodProvider
+     * @param string $method
+     */
+    public function testRequestMethod($method)
+    {
+        $controller = $this->getController();
+        list($request, $response) = $this->getRequests();
+        $request->method('getMethod')->will($this->returnValue($method));
+
+        $controller($request, $response);                
+
+        $data = $this->getMethodsMap($method);
+
+        foreach ($data as $func => $value) {
+            $this->assertEquals($value, $controller->$func(), "Method '$func' returns incorrect value");
+        }
+    }
+
+    /**
+     * Provide data for testing functions that determine request method
+     *
+     * @return array
+     */
+    public function requestMethodProvider()
+    {
+        return [
+            ['GET'], ['POST'], ['PUT'], ['DELETE'], ['HEAD']
+        ];
+    }
+
+    /**
      * Get map of status codes to states
      *
      * @param int $code
@@ -89,6 +125,33 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             'isClientError' => $code >= 400 && $code < 500,
             'isServerError' => $code >= 500            
         ];
+    }
+
+    /**
+     * Get map of request methods
+     *
+     * @param string $method
+     * @return array
+     */
+    public function getMethodsMap($method)
+    {
+        return [
+            'isGetRequest' => $method === 'GET',
+            'isPostRequest' => $method === 'POST',
+            'isPutRequest' => $method === 'PUT',
+            'isDeleteRequest' => $method === 'DELETE',
+            'isHeadRequest' => $method === 'HEAD'
+        ];
+    }
+
+    /**
+     * Get controller instance
+     *
+     * @return Controller
+     */
+    public function getController()
+    {
+        return $this->getMockBuilder(Controller::class)->disableOriginalConstructor()->getMockForAbstractClass();
     }
 
     /**

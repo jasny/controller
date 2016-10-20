@@ -111,25 +111,89 @@ abstract class Controller
     }   
 
     /**
-      * Check if response is 4xx or 5xx error
-      *
-      * @return boolean
-      */
-     public function isError()
-     {
-         return $this->isClientError() || $this->isServerError();
-     } 
+     * Check if response is 4xx or 5xx error
+     *
+     * @return boolean
+     */
+    public function isError()
+    {
+        return $this->isClientError() || $this->isServerError();
+    } 
 
-     /**
-      * Get status code of response
-      *
-      * @return int
-      */
-     protected function getResponseStatusCode()
-     {
+    /**
+     * Check if request is GET request
+     *
+     * @return boolean
+     */
+    public function isGetRequest()
+    {
+        $method = $this->getRequestMethod();
+
+        return !$method || $method === 'GET';
+    }
+
+    /**
+     * Check if request is POST request
+     *
+     * @return boolean
+     */
+    public function isPostRequest()
+    {
+        return $this->getRequestMethod() === 'POST';
+    }
+
+    /**
+     * Check if request is PUT request
+     *
+     * @return boolean
+     */
+    public function isPutRequest()
+    {
+        return $this->getRequestMethod() === 'PUT';
+    }
+
+    /**
+     * Check if request is DELETE request
+     *
+     * @return boolean
+     */
+    public function isDeleteRequest()
+    {
+        return $this->getRequestMethod() === 'DELETE';
+    }
+    
+    /**
+     * Check if request is HEAD request
+     *
+     * @return boolean
+     */
+    public function isHeadRequest()
+    {
+        return $this->getRequestMethod() === 'HEAD';
+    }
+
+    /**
+     * Get status code of response
+     *
+     * @return int
+     */
+    protected function getResponseStatusCode()
+    {
         $response = $this->getResponse();
 
         return $response ? $response->getStatusCode() : 0;
-     }
+    }
+
+    /**
+     * Get method of request
+     *
+     * @return string
+     */
+    protected function getRequestMethod()
+    {
+        $request = $this->getRequest();
+
+        return $request ? $request->getMethod() : '';
+    }
 }
 
