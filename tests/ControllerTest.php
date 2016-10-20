@@ -108,8 +108,8 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             $expect = $data->asXML();
         }
 
-        $this->assertNotEmpty($result);
-        $this->assertEquals($expect, $result);
+        $this->assertNotEmpty($result, "Result should not be empty");
+        $this->assertEquals($expect, $result, "Data was not encoded correctly");
     }
 
     /**
@@ -172,7 +172,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             $expect = $data->asXML();
         }
 
-        $this->assertNotEquals($expect, $result);
+        $this->assertNotEquals($expect, $result, "Data should not be encoded correctly here");
     }
 
     /**
