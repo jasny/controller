@@ -118,8 +118,72 @@ abstract class Controller
      public function isError()
      {
          return $this->isClientError() || $this->isServerError();
-     } 
+     }
 
+    /**
+     * Encode data to send to client
+     *
+     * @param mixed $data
+     * @return string
+     */
+    public function encodeData($data)
+    {
+        $response = $this->getResponse();
+        $invalid = !$response || 
+            !($type = $response->getHeaderLine('Content-Type')) ||
+            !in_array($type, ['application/json', 'text/xml', 'application/xml'], true);
+
+        if ($invalid) {
+            throw new \RuntimeException("Valid content type is not set in response for encoding data");            
+        }
+
+        switch ($type) {
+            case 'application/json': 
+                return $this->encodeDataAsJson($data);                            
+            case 'text/xml':
+            case 'application/xml':
+                return $this->encodeDataAsXml($data);
+        }
+    } 
+
+    /**
+     * Encode data as xml
+     *
+     * @param \SimpleXMLElement $data
+     * @return string
+     */
+    protected function encodeDataAsXml(\SimpleXMLElement $data)
+    {
+        return $data->asXML();
+    }
+
+    /**
+     * Encode data as json
+     *
+     * @param mixed
+     * @return string
+     */
+    protected function encodeDataAsJson($data)
+    {
+        $data = json_encode($data);
+
+        return $this->isJsonp() ? 
+            $this->getRequest()->getQueryParams()['callback'] . '(' . $data . ')' : 
+            $data;
+    }
+
+    /**
+     * Check if we should respond with jsonp
+     *
+     * @return boolean
+     */
+    protected function isJsonp()
+    {
+        $request = $this->getRequest();
+
+        return $request && !empty($request->getQueryParams()['callback']);
+    }
+    
      /**
       * Get status code of response
       *
