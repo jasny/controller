@@ -2,6 +2,7 @@
 
 namespace Jasny\Controller\View;
 
+use Jasny\Flash;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -47,8 +48,8 @@ trait Twig
     /**
      * Expose a function to the view.
      * 
-     * @param string $function  Variable name
-     * @param mixed  $callback
+     * @param string $name       Variable name
+     * @param mixed  $function
      * @param string $as        'function' or 'filter'
      * @return $this
      */
@@ -119,7 +120,9 @@ trait Twig
         }
         
         $uri = $this->getRequest()->getUri()->getPath();
+        
         $this->setViewVariable('current_url', $uri);
+        $this->setViewVariable('flash', new Flash());
 
         return $this->twig;
     }
@@ -149,7 +152,7 @@ trait Twig
      * Create twig function
      *
      * @param string $name          Name of function in view
-     * @param callable $function 
+     * @param callable|null $function 
      * @return \Twig_SimpleFunction
      */
     public function createTwigFunction($name, $function)
@@ -163,7 +166,7 @@ trait Twig
      * Create twig filter
      *
      * @param string $name          Name of filter in view
-     * @param callable $function 
+     * @param callable|null $function 
      * @return \Twig_SimpleFilter
      */
     public function createTwigFilter($name, $function)

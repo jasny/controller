@@ -23,6 +23,12 @@ abstract class Controller
     protected $response = null;
 
     /**
+     * Flash
+     * @var Flash
+     **/
+    protected $flash = null;
+
+    /**
      * Run the controller
      *
      * @return ResponseInterface
@@ -62,6 +68,21 @@ abstract class Controller
         $this->response = $response;
 
         return $this->run();
+    }
+
+    /**
+     * Set the flash message and/or return the flash object.
+     * 
+     * @param mixed $type     flash type, eg. 'error', 'notice' or 'success'
+     * @param mixed $message  flash message
+     * @return Flash
+     */
+    public function flash($type = null, $message = null)
+    {
+        if (!isset($this->flash)) $this->flash = new Flash();        
+        if ($type && $message) $this->flash->set($type, $message);
+
+        return $this->flash;
     }
 
     /**

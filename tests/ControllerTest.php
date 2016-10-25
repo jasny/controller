@@ -1,6 +1,7 @@
 <?php
 
 use Jasny\Controller;
+use Jasny\Flash;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -73,6 +74,43 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             [400], [403], [499],
             [500], [503]
         ];
+    }
+
+    /**
+     * Test setting flash
+     *
+     * @dataProvider flashProvider
+     * @param object $data 
+     */
+    public function testFlash($data)
+    {
+        $controller = $this->getMockBuilder(Controller::class)->disableOriginalConstructor()->getMockForAbstractClass();
+
+        $flash = $controller->flash();
+        $this->assertInstanceOf(Flash::class, $flash, "Flash is not set");
+        $this->assertEmpty($flash->get(), "Flash data should be empty");        
+
+        $flash = $controller->flash($data->type, $data->message);
+        $this->assertInstanceOf(Flash::class, $flash, "Flash is not set");
+        $this->assertEquals($data, $flash->get(), "Flash data is incorrect");
+
+        $flash = $controller->flash();
+        $this->assertInstanceOf(Flash::class, $flash, "Flash is not set");
+        $this->assertEquals($data, $flash->get(), "Flash data is incorrect");
+
+        $flash->clear();
+    }
+
+    /**
+     * Test setting flash
+     *
+     * @return array
+     */
+    public function flashProvider()
+    {
+        return [
+            [(object)['type' => 'test_type', 'message' => 'Test message']]
+        ];  
     }
 
     /**

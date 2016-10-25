@@ -1,5 +1,6 @@
 <?php
 
+use Jasny\Flash;
 use Jasny\Controller\View\Twig;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -16,7 +17,7 @@ class TwigTest extends PHPUnit_Framework_TestCase
      */
     public function testGetTwig()
     {
-        $view = $this->getView(['getTwigLoader', 'getTwigEnvironment', 'createTwigFunction', 'createTwigFilter', 'setViewExtension']);
+        $view = $this->getView(['getTwigLoader', 'getTwigEnvironment', 'createTwigFunction', 'createTwigFilter', 'setViewExtension', 'setViewVariable']);
         list($request, $response) = $this->getRequests();
         list($loader, $env) = $this->getTwigObjects();
 
@@ -32,7 +33,12 @@ class TwigTest extends PHPUnit_Framework_TestCase
         $view->expects($this->once())->method('getRequest')->will($this->returnValue($request));
         $request->expects($this->once())->method('getUri')->will($this->returnValue($uri));
         $uri->expects($this->once())->method('getPath')->will($this->returnValue($path));
-        $env->expects($this->once())->method('addGlobal')->with($this->equalTo('current_url'), $this->equalTo($path));
+        $view->expects($this->exactly(2))->method('setViewVariable')->withConsecutive(
+            [$this->equalTo('current_url'), $this->equalTo($path)],
+            [$this->equalTo('flash'), $this->callback(function($flash) {
+                return $flash instanceof Flash && empty($flash->get());
+            })]
+        );
 
         $result = $view->getTwig();
         $resultSaved = $view->getTwig();
