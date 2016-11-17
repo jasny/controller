@@ -41,6 +41,12 @@ abstract class Controller
         'application/x-www-form-urlencoded' => 'post',
         'multipart/form-data' => 'post'
     ];
+    
+    /**
+     * Flash
+     * @var Flash
+     */
+    protected $flash = null;
 
     /**
      * Run the controller
@@ -282,6 +288,21 @@ abstract class Controller
 
         return $errorResponse;
     }
+    
+    /**
+     * Set the flash message and/or return the flash object.
+     * 
+     * @param mixed $type     flash type, eg. 'error', 'notice' or 'success'
+     * @param mixed $message  flash message
+     * @return Flash
+     */
+    public function flash($type = null, $message = null)
+    {
+        if (!isset($this->flash)) $this->flash = new Flash();        
+        if ($type && $message) $this->flash->set($type, $message);
+
+        return $this->flash;
+    }
 
     /**
      * Check if response is 2xx succesful, or empty
@@ -516,4 +537,3 @@ abstract class Controller
         return $request ? $request->getMethod() : '';
     }
 }
-

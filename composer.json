@@ -20,7 +20,13 @@
         "jasny/php-functions": "^2.0"
     },
     "require-dev": {
-        "jasny/php-code-quality": "^2.0"
+        "jasny/php-code-quality": "^2.0",
+        "jasny/twig-extensions": "^1.0",
+        "twig/twig": "^1.26"
+    },
+    "suggest": {
+        "jasny/twig-extensions": "Usefull extensions for Twig",
+        "twig/twig": "Needed to work with Twig templates"
     },
     "autoload": {
         "psr-4": {
@@ -28,4 +34,3 @@
         }
     }
 }
-
