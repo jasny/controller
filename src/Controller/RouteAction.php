@@ -15,40 +15,75 @@ trait RouteAction
      *
      * @return ServerRequestInterface
      */
-     abstract public function getRequest();
+    abstract protected function getRequest();
 
-     /**
+    /**
      * Get response. set for controller
      *
      * @return ResponseInterface
      */
-     abstract public function getResponse();
+    abstract protected function getResponse();
 
+    /**
+     * Respond with a server error
+     *
+     * @param string $message
+     * @param int    $code     HTTP status code
+     */
+    abstract public function notFound($message = '', $code = 404);
+
+    /**
+     * Check if response is 2xx succesful, or empty
+     * 
+     * @return boolean
+     */
+    abstract public function isSuccessful();
+    
+    
+    /**
+     * Called before executing the action.
+     * If the response is no longer a success statuc (>= 300), the action will not be executed.
+     * 
+     * <code>
+     * protected function beforeAction()
+     * {
+     *    $this->respondWith('json'); // Respond with JSON by default
+     * 
+     *    if ($this->auth->getUser()->getCredits() <= 0) {
+     *        $this->paymentRequired();
+     *    }
+     * }
+     * </code>
+     */
+    protected function beforeAction()
+    {
+    }
+    
     /**
      * Run the controller
      *
      * @return ResponseInterface
      */
-    public function run() {
-        $request = $this->getRequest();
-        $route = $request->getAttribute('route');
+    public function run()
+    {
+        $route = $this->getRequest()->getAttribute('route');
         $method = $this->getActionMethod(isset($route->action) ? $route->action : 'default');
-        
+
         if (!method_exists($this, $method)) {
-            return $this->setResponseError(404, 'Not Found');
+            return $this->notFound();
         }
 
-        try {
-            $args = isset($route->args) ? 
-                $route->args :
-                $this->getFunctionArgs($route, new \ReflectionMethod($this, $method));            
-        } catch (\RuntimeException $e) {
-            return $this->setResponseError(400, 'Bad Request');   
+        $args = isset($route->args)
+            ? $route->args
+            : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
+
+        $this->beforeAction();
+        
+        if ($this->isSuccessful()) {
+            call_user_func_array([$this, $method], $args);
         }
 
-        $response = call_user_func_array([$this, $method], $args);
-
-        return $response ?: $this->getResponse();        
+        return $this->getResponse();        
     }
 
     /**
@@ -96,22 +131,4 @@ trait RouteAction
         
         return $args;
     }
-
-    /**
-     * Set response to error state
-     *
-     * @param int $code
-     * @param string $message 
-     * @return ResponseInterface
-     */
-    protected function setResponseError($code, $message)
-    {
-        $response = $this->getResponse();
-
-        $errorResponse = $response->withStatus($code);
-        $errorResponse->getBody()->write($message);
-
-        return $errorResponse;
-    }
 }
-
