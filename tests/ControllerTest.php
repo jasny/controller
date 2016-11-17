@@ -5,6 +5,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
+/**
+ * @covers Jasny\Controller
+ */
 class ControllerTest extends PHPUnit_Framework_TestCase
 {
     /**
@@ -41,7 +44,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase
      * Test functions that check response status code
      *
      * @dataProvider responseStatusProvider
-     * @param int $statusCode
+     * @param int  status code
      */
     public function testResponseStatus($code)
     {
@@ -57,7 +60,8 @@ class ControllerTest extends PHPUnit_Framework_TestCase
             $this->assertEquals($value, $controller->$func(), "Method '$func' returns incorrect value");
         }
 
-        $this->assertEquals($data['isClientError'] || $data['isServerError'], $controller->isError(), "Method 'isError' returns incorrect value");
+        $this->assertEquals($data['isClientError'] || $data['isServerError'], $controller->isError()
+            , "Method 'isError' returns incorrect value");
     }
 
     /**
@@ -76,6 +80,39 @@ class ControllerTest extends PHPUnit_Framework_TestCase
         ];
     }
 
+    /**
+     * Test functions that check request method
+     *
+     * @dataProvider requestMethodProvider
+     * @param string $method
+     */
+    public function testRequestMethod($method)
+    {
+        $controller = $this->getController();
+        list($request, $response) = $this->getRequests();
+        $request->method('getMethod')->will($this->returnValue($method));
+
+        $controller($request, $response);                
+
+        $data = $this->getMethodsMap($method);
+
+        foreach ($data as $func => $value) {
+            $this->assertEquals($value, $controller->$func(), "Method '$func' returns incorrect value");
+        }
+    }
+
+    /**
+     * Provide data for testing functions that determine request method
+     *
+     * @return array
+     */
+    public function requestMethodProvider()
+    {
+        return [
+            ['GET'], ['POST'], ['PUT'], ['DELETE'], ['HEAD']
+        ];
+    }
+    
     /**
      * Test encodeData method, positive tests
      *
@@ -616,6 +653,19 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Get request and response instances
+     *
+     * @return array
+     */
+    public function getRequests()
+    {
+        return [
+            $this->createMock(ServerRequestInterface::class),
+            $this->createMock(ResponseInterface::class)            
+        ];
+    }
+    
+    /**
      * Get map of status codes to states
      *
      * @param int $code
@@ -632,15 +682,19 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Get request and response instances
+     * Get map of request methods
      *
+     * @param string $method
      * @return array
      */
-    public function getRequests()
+    public function getMethodsMap($method)
     {
         return [
-            $this->createMock(ServerRequestInterface::class),
-            $this->createMock(ResponseInterface::class)            
+            'isGetRequest' => $method === 'GET',
+            'isPostRequest' => $method === 'POST',
+            'isPutRequest' => $method === 'PUT',
+            'isDeleteRequest' => $method === 'DELETE',
+            'isHeadRequest' => $method === 'HEAD'
         ];
     }
 }
