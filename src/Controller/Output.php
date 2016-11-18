@@ -8,8 +8,13 @@ use Dflydev\ApacheMimeTypes\PhpRepository as ApacheMimeTypes;
 /**
  * Methods for a controller to send a response
  */
-trait Respond
+trait Output
 {
+    /**
+     * @var string
+     */
+    protected $defaultFormat;
+    
     /**
      * Get response. set for controller
      *
@@ -30,6 +35,17 @@ trait Respond
      * @return string
      */
     abstract public function getLocalReferer();
+    
+    
+    /**
+     * If a non scalar value is passed without an format, use this format
+     * 
+     * @param string $format  Format by extention or MIME
+     */
+    public function byDefaultSerializeTo($format)
+    {
+        $this->defaultFormat = $format;
+    }
     
     
     /**
@@ -96,40 +112,66 @@ trait Respond
     }
 
     /**
-     * Response with created 201 code, and optionaly redirect to created location
+     * Response with created 201 code, and optionally the created location
      *
      * @param string $location  Url of created resource
      */
-    public function created($location = '')
+    public function created($location = null)
     {
         $this->respondWith(201);
 
-        if ($location) {
+        if (!empty($location)) {
             $this->setResponseHeader('Location', $location);
         }
     }
 
     /**
-     * Response with 204 No Content
+     * Response with 203 Accepted
      */
-    public function noContent()
+    public function accepted()
     {
-        $this->respondWith(204);
+        $this->respondWith(202);
     }
 
     /**
-     * Redirect to url
+     * Response with 204 No Content
+     * 
+     * @param int $code  204 (No Content) or 205 (Reset Content)
+     */
+    public function noContent($code = 204)
+    {
+        $this->respondWith($code);
+    }
+    
+    /**
+     * Respond with a 206 Partial content with `Content-Range` header
+     * 
+     * @param int $rangeFrom  Beginning of the range in bytes
+     * @param int $rangeTo    End of the range in bytes
+     * @param int $totalSize  Total size in bytes
+     */
+    public function partialContent($rangeFrom, $rangeTo, $totalSize)
+    {
+        $this->respondWith(206);
+        
+        $this->setResponseHeader('Content-Range', "bytes {$rangeFrom}-{$rangeTo}/{$totalSize}");
+        $this->setResponseHeader('Content-Length', $rangeTo - $rangeFrom);
+    }
+
+    
+    /**
+     * Redirect to url and output a short message with the link
      *
      * @param string $url
-     * @param int $code    301 (Moved Permanently), 303 (See Other) or 307 (Temporary Redirect)
+     * @param int    $code  301 (Moved Permanently), 302 (Found), 303 (See Other) or 307 (Temporary Redirect)
      */
     public function redirect($url, $code = 303)
     {
-        $this->respondWith($code, 'text/html');
+        $this->respondWith($code);
         $this->setResponseHeader('Location', $url);
         
         $urlHtml = htmlentities($url);
-        $this->output('You are being redirected to <a href="' . $urlHtml . '">' . $urlHtml . '</a>');
+        $this->output('You are being redirected to <a href="' . $urlHtml . '">' . $urlHtml . '</a>', 'text/html');
     }
 
     /**
@@ -140,6 +182,14 @@ trait Respond
     public function back()
     {
         $this->redirect($this->getLocalReferer() ?: '/');
+    }
+    
+    /**
+     * Respond with 304 Not Modified
+     */
+    public function notModified()
+    {
+        $this->respondWith(304);
     }
 
     
@@ -188,7 +238,7 @@ trait Respond
      *
      * @param string $message
      */
-    public function forbidden($message = "Forbidden")
+    public function forbidden($message = "Access denied")
     {
         $this->respondWith(403);
         $this->output($message);
@@ -198,7 +248,7 @@ trait Respond
      * Respond with 404 Not Found
      *
      * @param string $message
-     * @param int    $code     HTTP status code (404 or 405)
+     * @param int    $code     404 (Not Found), 405 (Method not allowed) or 410 (Gone)
      */
     public function notFound($message = "Not found", $code = 404)
     {
@@ -273,16 +323,53 @@ trait Respond
      */
     protected function serializeData($data, $contentType)
     {
-        if ($contentType == 'json') {
-            return (is_string($data) && (json_decode($data) !== null || !json_last_error()))
-                ? $data : json_encode($data);
+        if (is_scalar($data)) {
+            return (string)$data;
         }
         
-        if (!is_scalar($data)) {
-            throw new \Exception("Unable to serialize data to {$contentType}");
+        $format = preg_replace('~^.+/~', '', $contentType);
+        $method = 'serializeDataTo' . $format;
+        
+        if (method_exists($this, $method)) {
+            return $this->$method($data);
         }
         
-        return $data;
+        if (is_object($data) && method_exists($data, '__toString')) {
+            return (string)$data;
+        }
+
+        throw new \Exception("Unable to serialize data to $format");
+    }
+    
+    /**
+     * Serialize data to JSON
+     * 
+     * @param mixed $data
+     * @return string
+     */
+    private function serializeDataToJson($data)
+    {
+        return json_encode($data);
+    }
+    
+    /**
+     * Serialize data to XML
+     * 
+     * @param mixed $data
+     * @return string
+     */
+    private function serializeDataToXml($data)
+    {
+        if ($data instanceof \SimpleXMLElement) {
+            return $data->asXML();
+        }
+        
+        if ($data instanceof \DOMNode) {
+            return $data->ownerDocument->saveXML($data);
+        }
+        
+        $type = (is_object($data) ? get_class($data) . ' ' : '') . gettype($data);
+        throw new \Exception("Unable to serialize $type to XML");
     }
 
     /**
@@ -300,7 +387,7 @@ trait Respond
             $this->setResponseHeader('Content-Type', $contentType);
         }
         
-        $content = $this->serializeData($data, $contentType);
+        $content = $this->serializeData($data, $format);
 
         $this->getResponse()->getBody()->write($content);
     }

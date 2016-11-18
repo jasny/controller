@@ -10,7 +10,8 @@ use Psr\Http\Message\ResponseInterface;
  */
 abstract class Controller
 {
-    use Controller\Respond,
+    use Controller\Input,
+        Controller\Output,
         Controller\CheckRequest,
         Controller\CheckResponse;
     

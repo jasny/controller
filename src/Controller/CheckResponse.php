@@ -18,6 +18,17 @@ trait CheckResponse
 
     
     /**
+     * Check if response is a 1xx informational
+     * 
+     * @return boolean
+     */
+    public function isInformational()
+    {
+        $code = $this->getResponse()->getStatusCode() ?: 200;
+        return $code >= 100 && $code < 200;
+    }
+    
+    /**
      * Check if response is 2xx succesful, or empty
      * 
      * @return boolean
@@ -25,8 +36,7 @@ trait CheckResponse
     public function isSuccessful()
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
-
-        return !$code || ($code >= 200 && $code < 300);
+        return $code >= 200 && $code < 300;
     }
     
     /**
@@ -37,7 +47,6 @@ trait CheckResponse
     public function isRedirection()
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
-
         return $code >= 300 && $code < 400;
     }
     
@@ -49,7 +58,6 @@ trait CheckResponse
     public function isClientError()
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
-
         return $code >= 400 && $code < 500;
     }
     
@@ -60,8 +68,9 @@ trait CheckResponse
      */
     public function isServerError()
     {
-        return $this->getResponse()->getStatusCode() ?: 200 >= 500;
-    }   
+        $code = $this->getResponse()->getStatusCode() ?: 200;
+        return $code >= 500 && $code < 600;
+    }
 
     /**
      * Check if response is 4xx or 5xx error
@@ -71,5 +80,5 @@ trait CheckResponse
     public function isError()
     {
         return $this->isClientError() || $this->isServerError();
-    } 
+    }
 }

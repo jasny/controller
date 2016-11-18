@@ -1,7 +1,6 @@
 <?php
 
-require_once dirname(__DIR__) . '/support/TestController.php';
-
+use Jasny\Controller;
 use Jasny\Controller\RouteAction;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
