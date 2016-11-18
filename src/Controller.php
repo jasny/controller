@@ -12,8 +12,7 @@ abstract class Controller
 {
     use Controller\Respond,
         Controller\CheckRequest,
-        Controller\CheckResponse,
-        Controller\Session;
+        Controller\CheckResponse;
     
     /**
      * Server request
@@ -86,7 +85,9 @@ abstract class Controller
         $this->request = $request;
         $this->response = $response;
 
-        $this->useSession();
+        if (method_exists($this, 'useSession')) {
+            $this->useSession();
+        }
         
         return $this->run();
     }
