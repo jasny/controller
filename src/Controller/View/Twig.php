@@ -2,9 +2,8 @@
 
 namespace Jasny\Controller\View;
 
-use Jasny\Flash;
+use Jasny\Controller\Session\Flash;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * View using Twig
@@ -15,20 +14,34 @@ trait Twig
      * Twig environment
      * @var \Twig_Environment
      */
-    protected $twig = null;
+    protected $twig;
 
+    
     /**
      * Get server request
      * @return ServerRequestInterface
      */
-    abstract public function getRequest();
+    abstract protected function getRequest();
 
     /**
-     * Get server response
-     * @return ResponseInterface
+     * Output result
+     *
+     * @param mixed  $data
+     * @param string $format  Output format as MIME or extension
      */
-    abstract public function getResponse();
+    abstract public function output($data, $format = null);
 
+    
+    /**
+     * Get path of the view files
+     * 
+     * @return string
+     */
+    protected function getViewPath()
+    {
+        return getcwd();
+    }
+    
     /**
      * Add a global variable to the view.
      * 
@@ -48,17 +61,19 @@ trait Twig
     /**
      * Expose a function to the view.
      * 
-     * @param string $name       Variable name
-     * @param mixed  $function
-     * @param string $as        'function' or 'filter'
+     * @param string      $name      Function name
+     * @param string|null $function
+     * @param string      $as        'function' or 'filter'
      * @return $this
      */
     public function setViewFunction($name, $function = null, $as = 'function')
     {
         if ($as === 'function') {
-            $this->getTwig()->addFunction($this->createTwigFunction($name, $function));
+            $function = new \Twig_SimpleFunction($name, $function ?: $name);
+            $this->getTwig()->addFunction($function);
         } elseif ($as === 'filter') {
-            $this->getTwig()->addFilter($this->createTwigFilter($name, $function));
+            $filter = \Twig_SimpleFilter($name, $function ?: $name);
+            $this->getTwig()->addFilter($filter);
         } else {
             throw new \InvalidArgumentException("You should create either function or filter, not '$as'");
         }
@@ -67,112 +82,70 @@ trait Twig
     }
 
     /**
-     * Add extension to view
+     * Get twig environment instance
      *
-     * @param object $extension
-     * @return $this
+     * @return \Twig_Environment
      */
-    public function setViewExtension($extension)
+    protected function createTwigEnvironment()
     {
-        $this->getTwig()->addExtension($extension);
-
-        return $this;
+        $path = $this->getViewPath();
+        $loader = new \Twig_Loader_Filesystem($path);
+        
+        return new \Twig_Environment($loader);
     }
 
     /**
-     * View rendered template
-     *
-     * @param string $name   Template name
-     * @param array $context Template context
-     * @return ResponseInterface
+     * Initialize the Twig environment
      */
-    public function view($name, array $context = [])
+    protected function initTwig()
     {
-        if (!pathinfo($name, PATHINFO_EXTENSION)) $name .= '.html.twig';
+        $this->twig = $this->createTwigEnvironment();
 
-        $twig = $this->getTwig();
-        $tmpl = $twig->loadTemplate($name);
-
-        $response = $this->getResponse();
-        $response = $response->withHeader('Content-Type', 'text/html; charset=' . $twig->getCharset());
-        $response->getBody()->write($tmpl->render($context));            
-
-        return $response;
+        $extensions = ['DateExtension', 'PcreExtension', 'TextExtension', 'ArrayExtension'];
+        foreach ($extensions as $name) {
+            $class = "Jasny\Twig\\$name";
+            
+            if (class_exists($class)) {
+                $this->twig->addExtension(new $class());
+            }
+        }
+        
+        $uri = $this->getRequest()->getUri();
+        
+        $this->setViewVariable('current_url', $uri);
+        $this->setViewVariable('flash', new Flash());
     }
 
     /**
-     * Get twig environment
+     * Get Twig environment
      *
      * @return \Twig_Environment
      */
     public function getTwig()
     {
-        if ($this->twig) return $this->twig;
-
-        $loader = $this->getTwigLoader();
-        $this->twig = $this->getTwigEnvironment($loader);
-
-        $extensions = ['DateExtension', 'PcreExtension', 'TextExtension', 'ArrayExtension'];
-        foreach ($extensions as $name) {
-            $class = "Jasny\Twig\\$name";
-
-            if (class_exists($class)) $this->setViewExtension(new $class());
+        if (!isset($this->twig)) {
+            $this->initTwig();
         }
         
-        $uri = $this->getRequest()->getUri()->getPath();
-        
-        $this->setViewVariable('current_url', $uri);
-        $this->setViewVariable('flash', new Flash());
-
         return $this->twig;
     }
+    
 
     /**
-     * Get twig loasder for current working directory
+     * View rendered template
      *
-     * @return \Twig_Loader_Filesystem
+     * @param string $name    Template name
+     * @param array  $context Template context
      */
-    public function getTwigLoader()
+    public function view($name, array $context = [])
     {
-        return new \Twig_Loader_Filesystem(getcwd());
-    }
+        if (!pathinfo($name, PATHINFO_EXTENSION)) {
+            $name .= '.html.twig';
+        }
 
-    /**
-     * Get twig environment instance
-     *
-     * @param \Twig_Loader_Filesystem $loader
-     * @return \Twig_Environment
-     */
-    public function getTwigEnvironment(\Twig_Loader_Filesystem $loader)
-    {
-        return new \Twig_Environment($loader);
-    }
+        $twig = $this->getTwig();
+        $tmpl = $twig->loadTemplate($name);
 
-    /**
-     * Create twig function
-     *
-     * @param string $name          Name of function in view
-     * @param callable|null $function 
-     * @return \Twig_SimpleFunction
-     */
-    public function createTwigFunction($name, $function)
-    {
-        if (!$name) throw new \InvalidArgumentException("Function name should not be empty");
-
-        return new \Twig_SimpleFunction($name, $function ?: $name);
-    }
-
-    /**
-     * Create twig filter
-     *
-     * @param string $name          Name of filter in view
-     * @param callable|null $function 
-     * @return \Twig_SimpleFilter
-     */
-    public function createTwigFilter($name, $function)
-    {
-        if (!$name) throw new \InvalidArgumentException("Filter name should not be empty");
-
-        return new \Twig_SimpleFilter($name, $function ?: $name);
+        $this->output($tmpl->render($context), 'text/html; charset=' . $twig->getCharset());
     }
 }
