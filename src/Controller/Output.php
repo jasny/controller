@@ -38,17 +38,6 @@ trait Output
     
     
     /**
-     * If a non scalar value is passed without an format, use this format
-     * 
-     * @param string $format  Format by extention or MIME
-     */
-    public function byDefaultSerializeTo($format)
-    {
-        $this->defaultFormat = $format;
-    }
-    
-    
-    /**
      * Set a response header
      * 
      * @param string  $header
@@ -76,23 +65,24 @@ trait Output
      *   $this->respondWith('json');
      * </code>
      * 
-     * @param int          $code            HTTP status code (may be omitted)
-     * @param string|array $format          Mime or content format
+     * @param int|string   $status  HTTP status (may be omitted)
+     * @param string|array $format  Mime or content format
      */
-    public function respondWith($code, $format = null)
+    public function respondWith($status, $format = null)
     {
         $response = $this->getResponse();
 
         // Shift arguments if $code is omitted
-        if (!is_int($code) && !preg_match('/^\d{3}\b/', $code)) {
-            list($code, $format) = array_merge([null], func_get_args());
+        if (isset($status) && !is_int($status) && (!is_string($status) || !preg_match('/^\d{3}\b/', $status))) {
+            list($status, $format) = array_merge([null], func_get_args());
         }
 
-        if ($code) {
-            $response = $response->withStatus((int)$code);
+        if (!empty($status)) {
+            list($code, $phrase) = explode(' ', $status, 2) + [1 => null];
+            $response = $response->withStatus((int)$code, $phrase);
         }
         
-        if ($format) {
+        if (!empty($format)) {
             $contentType = $this->getContentType($format);
             $response = $response->withHeader('Content-Type', $contentType);   
         }
@@ -305,13 +295,24 @@ trait Output
         }
         
         $repository = new ApacheMimeTypes();
-        $mime = $repository->findType('html');
+        $mime = $repository->findType($format);
 
         if (!isset($mime)) {
-            throw new \UnexpectedValueException("Format $format doesn't correspond with a MIME type");
+            throw new \UnexpectedValueException("Format '$format' doesn't correspond with a MIME type");
         }
         
         return $mime;
+    }
+    
+    
+    /**
+     * If a non scalar value is passed without an format, use this format
+     * 
+     * @param string $format  Format by extention or MIME
+     */
+    public function byDefaultSerializeTo($format)
+    {
+        $this->defaultFormat = $format;
     }
     
     /**
@@ -323,26 +324,26 @@ trait Output
      */
     protected function serializeData($data, $contentType)
     {
-        if (is_scalar($data)) {
-            return (string)$data;
+        if (is_string($data)) {
+            return $data;
         }
         
-        $format = preg_replace('~^.+/~', '', $contentType);
+        $repository = new ApacheMimeTypes();
+        list($format) = $repository->findExtensions($contentType) + [null];
+        
         $method = 'serializeDataTo' . $format;
         
         if (method_exists($this, $method)) {
             return $this->$method($data);
         }
-        
-        if (is_object($data) && method_exists($data, '__toString')) {
-            return (string)$data;
-        }
 
-        throw new \Exception("Unable to serialize data to $format");
+        $type = (is_object($data) ? get_class($data) . ' ' : '') . gettype($data);
+        throw new \UnexpectedValueException("Unable to serialize $type to '$contentType'");
     }
     
     /**
      * Serialize data to JSON
+     * @internal made private because this will likely move to a library
      * 
      * @param mixed $data
      * @return string
@@ -353,7 +354,8 @@ trait Output
     }
     
     /**
-     * Serialize data to XML
+     * Serialize data to XML.
+     * @internal made private because this will likely move to a library
      * 
      * @param mixed $data
      * @return string
@@ -364,12 +366,13 @@ trait Output
             return $data->asXML();
         }
         
-        if ($data instanceof \DOMNode) {
-            return $data->ownerDocument->saveXML($data);
+        if (($data instanceof \DOMNode && isset($data->ownerDocument)) || $data instanceof \DOMDocument) {
+            $dom = $data instanceof \DOMDocument ? $data : $data->ownerDocument;
+            return $dom->saveXML($data);
         }
         
         $type = (is_object($data) ? get_class($data) . ' ' : '') . gettype($data);
-        throw new \Exception("Unable to serialize $type to XML");
+        throw new \UnexpectedValueException("Unable to serialize $type to XML");
     }
 
     /**
@@ -381,13 +384,28 @@ trait Output
     public function output($data, $format = null)
     {
         if (!isset($format)) {
-            $contentType = $this->getResponse()->getHeaderLine('Content-Type') ?: 'text/html';
-        } else {
+            $contentType = $this->getResponse()->getHeaderLine('Content-Type');
+            
+            if (empty($contentType)) {
+                $format = $this->defaultFormat ?: 'text/html';
+            }
+        }
+        
+        if (empty($contentType)) {
             $contentType = $this->getContentType($format);
             $this->setResponseHeader('Content-Type', $contentType);
         }
-        
-        $content = $this->serializeData($data, $format);
+
+        try {
+            $content = $this->serializeData($data, $contentType);
+        } catch (\UnexpectedValueException $e) {
+            if (!isset($format) && isset($this->defaultFormat) && $this->defaultFormat !== $contentType) {
+                $this->output($data, $this->defaultFormat); // Try default format instead
+                return;
+            }
+            
+            throw $e;
+        }
 
         $this->getResponse()->getBody()->write($content);
     }
