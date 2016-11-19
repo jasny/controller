@@ -20,14 +20,14 @@ trait Output
      *
      * @return ResponseInterface
      */
-    abstract protected function getResponse();
+    abstract public function getResponse();
 
     /**
      * Get response. set for controller
      *
      * @return ResponseInterface
      */
-    abstract protected function setResponse(ResponseInterface $response);
+    abstract public function setResponse(ResponseInterface $response);
 
     /**
      * Returns the HTTP referer if it is on the current host

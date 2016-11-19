@@ -14,7 +14,7 @@ trait CheckResponse
      *
      * @return ResponseInterface
      */
-    abstract protected function getResponse();
+    abstract public function getResponse();
 
     
     /**

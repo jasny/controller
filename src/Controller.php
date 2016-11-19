@@ -33,10 +33,10 @@ abstract class Controller
      *
      * @return ServerRequestInterface
      */
-    protected function getRequest()
+    public function getRequest()
     {
         if (!isset($this->request)) {
-            throw new \RuntimeException("Request not set, the controller has not been invoked");
+            throw new \LogicException("Request not set, the controller has not been invoked");
         }
         
         return $this->request;
@@ -47,10 +47,10 @@ abstract class Controller
      *
      * @return ResponseInterface
      */
-    protected function getResponse()
+    public function getResponse()
     {
         if (!isset($this->response)) {
-            throw new \RuntimeException("Response not set, the controller has not been invoked");
+            throw new \LogicException("Response not set, the controller has not been invoked");
         }
         
         return $this->response;
@@ -61,7 +61,7 @@ abstract class Controller
      *
      * @return ResponseInterface
      */
-    protected function setResponse(ResponseInterface $response)
+    public function setResponse(ResponseInterface $response)
     {
         $this->response = $response;
     }

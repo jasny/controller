@@ -15,14 +15,14 @@ trait RouteAction
      *
      * @return ServerRequestInterface
      */
-    abstract protected function getRequest();
+    abstract public function getRequest();
 
     /**
      * Get response. set for controller
      *
      * @return ResponseInterface
      */
-    abstract protected function getResponse();
+    abstract public function getResponse();
 
     /**
      * Respond with a server error

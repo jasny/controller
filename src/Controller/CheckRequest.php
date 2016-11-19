@@ -14,7 +14,7 @@ trait CheckRequest
      *
      * @return ServerRequestInterface
      */
-    abstract protected function getRequest();
+    abstract public function getRequest();
     
     
     /**

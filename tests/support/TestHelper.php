@@ -10,6 +10,16 @@ use Jasny\Controller;
 trait TestHelper
 {
     /**
+     * Get the controller class
+     * 
+     * @return string
+     */
+    protected function getControllerClass()
+    {
+        return Controller::class;
+    }
+    
+    /**
      * Get mock for controller
      *
      * @param array $methods  Methods to mock
@@ -17,7 +27,7 @@ trait TestHelper
      */
     public function getController($methods = [])
     {
-        $builder = $this->getMockBuilder(Controller::class)->disableOriginalConstructor();
+        $builder = $this->getMockBuilder($this->getControllerClass())->disableOriginalConstructor();
         if ($methods) {
             $builder->setMethods($methods);
         }
