@@ -10,6 +10,15 @@ use Jasny\Controller;
 trait TestHelper
 {
     /**
+     * Returns a builder object to create mock objects using a fluent interface.
+     *
+     * @param string $className
+     *
+     * @return \PHPUnit_Framework_MockObject_MockBuilder
+     */
+    abstract public function getMockBuilder($className);
+
+    /**
      * Get the controller class
      * 
      * @return string
@@ -25,13 +34,20 @@ trait TestHelper
      * @param array $methods  Methods to mock
      * @return Controller|\PHPUnit_Framework_MockObject_MockObject
      */
-    public function getController($methods = [])
+    public function getController($methods = [], $mockClassName = null)
     {
-        $builder = $this->getMockBuilder($this->getControllerClass())->disableOriginalConstructor();
+        $class = $this->getControllerClass();
+
+        $builder = $this->getMockBuilder($class)->disableOriginalConstructor();
         if ($methods) {
             $builder->setMethods($methods);
         }
 
-        return $builder->getMockForAbstractClass();
+        if (isset($mockClassName)) {
+            $builder->setMockClassName($mockClassName);
+        }
+        
+        $getMock = trait_exists($class) ? 'getMockForTrait' : 'getMockForAbstractClass';
+        return $builder->$getMock();
     }
 }

@@ -71,7 +71,7 @@ abstract class Controller
      *
      * @return ResponseInterface
      */
-    abstract protected function run();
+    abstract public function run();
 
 
     /**
@@ -90,6 +90,8 @@ abstract class Controller
             $this->useSession();
         }
         
-        return $this->run();
+        $this->run();
+        
+        return $this->getResponse();
     }
 }

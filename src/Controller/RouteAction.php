@@ -41,6 +41,42 @@ trait RouteAction
     
     
     /**
+     * Get the route
+     * 
+     * @return \stdClass
+     */
+    protected function getRoute()
+    {
+        $route = $this->getRequest()->getAttribute('route');
+        
+        if (!isset($route)) {
+            throw new \LogicException("Route has not been set");
+        }
+        
+        if (is_array($route)) {
+            $route = (object)$route;
+        }
+        
+        if (!$route instanceof \stdClass) {
+            $type = (is_object($route) ? get_class($route) . ' ' : '') . gettype($route);
+            throw new \UnexpectedValueException("Expected route to be a stdClass object, not a $type");
+        }
+        
+        return $route;
+    }
+
+    /**
+     * Get the method name of the action
+     * 
+     * @param string $action
+     * @return string
+     */
+    protected function getActionMethod($action)
+    {
+        return \Jasny\camelcase($action) . 'Action';
+    }
+    
+    /**
      * Called before executing the action.
      * If the response is no longer a success statuc (>= 300), the action will not be executed.
      * 
@@ -66,35 +102,21 @@ trait RouteAction
      */
     public function run()
     {
-        $route = $this->getRequest()->getAttribute('route');
+        $route = $this->getRoute();
         $method = $this->getActionMethod(isset($route->action) ? $route->action : 'default');
 
         if (!method_exists($this, $method)) {
             return $this->notFound();
         }
 
-        $args = isset($route->args)
-            ? $route->args
-            : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
-
         $this->beforeAction();
         
         if ($this->isSuccessful()) {
+            $args = isset($route->args) ? $route->args
+                : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
+
             call_user_func_array([$this, $method], $args);
         }
-
-        return $this->getResponse();        
-    }
-
-    /**
-     * Get the method name of the action
-     * 
-     * @param string $action
-     * @return string
-     */
-    protected function getActionMethod($action)
-    {
-        return \Jasny\camelcase($action) . 'Action';
     }
 
     /**
@@ -113,14 +135,11 @@ trait RouteAction
             $key = $param->name;
 
             if (property_exists($route, $key)) {
-                $value = $route->{$key};
+                $value = $route->$key;
             } else {
                 if (!$param->isOptional()) {
-                    $fn = $refl instanceof \ReflectionMethod
-                        ? $refl->class . ':' . $refl->name
-                        : $refl->name;
-
-                    throw new \RuntimeException("Missing argument '$key' for $fn()");
+                    $fn = $refl instanceof \ReflectionMethod ? $refl->class . '::' . $refl->name : $refl->name;
+                    throw new \RuntimeException("Missing argument '$key' for {$fn}()");
                 }
                 
                 $value = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;

@@ -7,7 +7,15 @@ use Jasny\Controller;
 /**
  * Class for testing 'RouteAction' trait
  */
-class RouteActionController extends Controller
+abstract class RouteActionController
 {
     use Controller\RouteAction;
+    
+    public function defaultAction($foo, $bar = null)
+    {
+    }
+    
+    public function runTestAction()
+    {
+    }
 }

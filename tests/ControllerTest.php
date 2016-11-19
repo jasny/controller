@@ -31,22 +31,13 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 $test->assertSame($request, $this->getRequest());
                 $test->assertSame($response, $this->getResponse());
                 
-                return $finalResponse;
+                $this->setResponse($finalResponse);
+                return null;
             }, $controller, Controller::class));
 
         $result = $controller($request, $response);
 
         $this->assertEquals($finalResponse, $result);
-    }
-    
-    public function testSetResponse()
-    {
-        $response = $this->createMock(ResponseInterface::class);
-        
-        $controller = $this->getController();
-        $controller->setResponse($response);
-        
-        $this->assertSame($response, $controller->getResponse());
     }
     
     /**

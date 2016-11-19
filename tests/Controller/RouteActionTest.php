@@ -4,112 +4,174 @@ namespace Jasny\Controller;
 
 use Jasny\Controller\RouteActionController;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
+use Jasny\Controller\TestHelper;
 
 /**
  * @covers Jasny\Controller\RouteAction
  */
 class RouteActionTest extends \PHPUnit_Framework_TestCase
 {
-    public function setUp()
+    use TestHelper {
+        getController as private _getController;
+    }
+    
+    protected function getControllerClass()
     {
-        $this->markTestIncomplete();
+        return RouteActionController::class;
+    }
+    
+    /**
+     * Get mock controller
+     * 
+     * @param array  $methods
+     * @param string $className
+     * @return RouteActionController|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getController($methods = array(), $className = null)
+    {
+        return $this->_getController(
+            array_merge($methods, ['getRequest', 'defaultAction', 'runTestAction', 'notFound', 'isSuccessful']),
+            $className
+        );
     }
 
-    /**
-     * Test running controller action
-     *
-     * @dataProvider runPositiveProvider
-     * @param object $route
-     */
-    public function testRunPositive($route)
+
+
+    public function actionProvider()
     {
-        $controller = new RouteActionController();
+        return [
+            [(object)['args' => [1]], 'defaultAction', [1]],
+            [(object)['action' => 'test-run'], 'testRunAction', []],
+            [(object)['action' => 'non-existent'], 'notFound', []]
+        ];
+    }
+    
+    /**
+     * Test running controller with different actions
+     * @dataProvider actionProvider
+     * 
+     * @param object $route
+     * @param string $method
+     * @param array  $args
+     */
+    public function testRunAction($route, $method, array $args)
+    {
         $request = $this->createMock(ServerRequestInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-
-        $request->method('getAttribute')->with($this->equalTo('route'))->will($this->returnValue($route));
-
-        $result = $controller($request, $response);
-        $args = !empty($route->args) ? $route->args : [$route->param1, isset($route->param2) ? $route->param2 : 'defaultValue'];
-
-        $this->assertEquals(get_class($response), get_class($result), "Controller should return 'ResponseInterface' instance");
-        $this->assertEquals($args[0], $result->param1, "First route parameter was not passed correctly");
-        $this->assertEquals($args[1], $result->param2, "Second route parameter was not passed correctly");
-
-        if (isset($route->action)) {
-            $this->assertTrue($result->actionCalled, "Controller action was not called");
-            $this->assertFalse(isset($result->defaultActionCalled), "Controller default action was called"); 
-        } else {
-            $this->assertTrue($result->defaultActionCalled, "Controller default action was not called");
-            $this->assertFalse(isset($result->actionCalled), "Controller non-default action was called");
+        $request->method('getAttribute')->with('route')->willReturn($route);
+        
+        $this->getMockBuilder($method);
+        
+        $controller = $this->getController();
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        $controller->expects($method !== 'notFound' ? $this->once() : $this->never())->method('isSuccessful')
+            ->willReturn(true);
+        
+        $controller->expects($this->once())->method($method)->with(...$args);
+        
+        foreach (['defaultAction', 'runTestAction', 'notFound'] as $fn) {
+            if ($fn !== $method) {
+                $controller->expects($this->never())->method($fn);
+            }
         }
+        
+        $controller->run();
     }
-
+    
+    
     /**
      * Provide data for testing run method
      */
-    public function runPositiveProvider()
+    public function argumentsProvider()
     {
         return [
-            [(object)['controller' => 'RouteActionController', 'param1' => 'value1']],
-            [(object)['controller' => 'RouteActionController', 'param1' => 'value1', 'param2' => 'value2']],
-            [(object)['controller' => 'RouteActionController', 'args' => ['value1', 'value2']]],
-            [(object)['controller' => 'RouteActionController', 'action' => 'test-run', 'param1' => 'value1']],
-            [(object)['controller' => 'RouteActionController', 'action' => 'test-run', 'param1' => 'value1', 'param2' => 'value2']],
-            [(object)['controller' => 'RouteActionController', 'action' => 'test-run', 'args' => ['value1', 'value2']]]
+            [(object)['foo' => 'value1'], ['value1', null]],
+            [['foo' => 'value1'], ['value1', null]],
+            [(object)['foo' => 'value1', 'bar' => 'value2'], ['value1', 'value2']],
+            [(object)['bar' => 'value1', 'foo' => 'value2'], ['value2', 'value1']],
+            [(object)['qux' => 'value1', 'foo' => 'value2'], ['value2', null]],
+            [(object)['args' => ['value1', 'value2']], ['value1', 'value2']],
+            [(object)['args' => ['value1', 'value2', 'value3']], ['value1', 'value2', 'value3']],
         ];
     }
 
     /**
-     * Test running controller action
-     *
-     * @dataProvider runNegativeProvider
+     * Test running controller with different arguments
+     * @dataProvider argumentsProvider
+     * 
      * @param object $route
-     * @param int $errorCode
-     * @param string $errorMessage
+     * @param array  $expect
      */
-    public function testRunNegative($route, $errorCode, $errorMessage)
+    public function testRunArgument($route, array $expect)
     {
-        $controller = new RouteActionController();
         $request = $this->createMock(ServerRequestInterface::class);
-        $response = $this->createMock(ResponseInterface::class);
-
-        $request->method('getAttribute')->with($this->equalTo('route'))->will($this->returnValue($route));
-
-        $this->expectResponseError($response, $errorCode, $errorMessage);
-
-        $result = $controller($request, $response);
-
-        $this->assertEquals(get_class($response), get_class($result), "Controller should return 'ResponseInterface' instance");
+        $request->method('getAttribute')->with('route')->willReturn($route);
+        
+        $controller = $this->getController();
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        $controller->expects($this->once())->method('isSuccessful')->willReturn(true);
+        
+        $controller->expects($this->once())->method('defaultAction')->with(...$expect);
+        $controller->expects($this->never())->method('runTestAction');
+        $controller->expects($this->never())->method('notFound');
+        
+        $controller->run();
     }
-
+    
+    
     /**
-     * Provide data for testing run method
+     * @expectedException \LogicException
      */
-    public function runNegativeProvider()
+    public function testRunWithoutRoute()
     {
-        return [
-            [(object)['controller' => 'RouteActionController', 'action' => 'nonExistMethod'], 404, 'Not Found'],
-            [(object)['controller' => 'RouteActionController', 'action' => 'test-run'], 400, 'Bad Request'],
-            [(object)['controller' => 'RouteActionController', 'action' => 'test-run', 'param2' => 'value2'], 400, 'Bad Request']
-        ];
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getAttribute')->with('route')->willReturn(null);
+        
+        $controller = $this->getController();
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        
+        $controller->run();
+    }
+    
+    /**
+     * @expectedException \UnexpectedValueException
+     * @expectedExceptionMessage Expected route to be a stdClass object, not a string
+     */
+    public function testRunWithInvalidRoute()
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getAttribute')->with('route')->willReturn('hello');
+        
+        $controller = $this->getController();
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        
+        $controller->run();
+    }
+    
+    /**
+     * @expectedException RuntimeException
+     * @expectedExceptionMessage Missing argument 'foo' for RunMissingArgumentController::defaultAction()
+     */
+    public function testRunMissingArgument()
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getAttribute')->with('route')->willReturn((object)['bar' => 20]);
+        
+        $controller = $this->getController([], 'RunMissingArgumentController');
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        $controller->expects($this->once())->method('isSuccessful')->willReturn(true);
+        
+        $controller->run();
     }
 
-    /**
-     * Expect that response will be set to error state
-     *
-     * @param ResponseInterface $response
-     * @param int $code
-     * @param string $message
-     */
-    public function expectResponseError($response, $code, $message)
-    {   
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->expects($this->once())->method('write')->with($this->equalTo($message));
+    public function testSkipActionIfNotSuccessful()
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getAttribute')->with('route')->willReturn((object)[]);
 
-        $response->expects($this->once())->method('getBody')->will($this->returnValue($stream));
-        $response->expects($this->once())->method('withStatus')->with($this->equalTo($code))->will($this->returnSelf());
+        $controller = $this->getController();
+        $controller->expects($this->any())->method('getRequest')->willReturn($request);
+        $controller->expects($this->once())->method('isSuccessful')->willReturn(false);
+
+        $controller->run();
     }
 }
