@@ -2,9 +2,6 @@
 
 namespace Jasny\Controller;
 
-use Jasny\Controller;
-use Jasny\Flash;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Jasny\Controller\TestHelper;
