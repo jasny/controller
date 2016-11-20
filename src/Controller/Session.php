@@ -33,7 +33,7 @@ trait Session
     /**
      * Link the session to the session property in the controller
      */
-    protected function useSession()
+    public function useSession()
     {
         $this->session = $this->getRequest()->getAttribute('session');
         

@@ -71,7 +71,7 @@ class Flash
             unset($this->session[$this->key]);
         }
         
-        return (object)$this->data;
+        return $this->data ? (object)$this->data : null;
     }
     
     /**
