@@ -52,10 +52,6 @@ class Flash
      */
     public function set($type, $message)
     {
-        if (!$type) {
-            throw new \InvalidArgumentException("Type should not be empty");            
-        }
-
         $this->session[$this->key] = compact('type', 'message');
     }
     

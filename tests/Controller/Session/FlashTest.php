@@ -9,146 +9,157 @@ use Jasny\Controller\Session\Flash;
  */
 class FlashTest extends \PHPUnit_Framework_TestCase
 {
-    public function setUp()
+    public function testGetEmpty()
     {
-        $this->markTestIncomplete();
-    }
-
-    /**
-     * Test flash
-     *
-     * @dataProvider flashProvider
-     * @param object $data
-     */
-    public function testFlash($data)
-    {
-        $flash = new Flash();
-        $this->assertFlashEmpty($flash);
-
-        //Set flash
-        $flash->set($data->type, $data->message);
-        $this->assertFlashDataCorrect($flash, $data);
-        $this->assertFlashIsIssued($flash, $data);
-
-        //Get data
-        $setData = $flash->get();
-        $this->assertFlashDataCorrect($flash, $data);
-        $this->assertFlashIsIssued($flash, $data);
-        $this->assertEquals($data, $setData, "Flash data was not got correctly");
-
-        //Clear
-        $flash->clear();
-        $this->assertFlashEmpty($flash);
-
-        //Set from session
-        $_SESSION['flash'] = $data;
-        $this->assertFlashIsIssued($flash, $data);
-
-        //When flash is set only in session, not by 'set' method, then getting it's data removes flash from session, so they only remain in flash object
-        $this->assertFlashDataCorrect($flash, $data);
-        $this->assertFalse(isset($_SESSION['flash']), "Session flash variable should be empty");
-        $this->assertTrue($flash->isIssued(), "Flash should be issued");
-
-        //Clear
-        $flash->clear();
-        $this->assertFlashEmpty($flash);
-
-        //Reissue from session
-        $_SESSION['flash'] = $data;
-        $flash->reissue();
-
-        $this->assertFlashDataCorrect($flash, $data);
-        $this->assertFlashIsIssued($flash, $data);
-
-        //Reissue from object data
-        unset($_SESSION['flash']);
-        $flash->reissue();        
-
-        $this->assertFlashDataCorrect($flash, $data);
-        $this->assertFlashIsIssued($flash, $data);
-
-        //Clear
-        $flash->clear();
-        $this->assertFlashEmpty($flash);
-    }
-
-    /**
-     * Provide data for testing flash
-     *
-     * @return array
-     */
-    public function flashProvider()
-    {
-        return [
-            [(object)['type' => 'test_type', 'message' => 'Test message']],
-            [(object)['type' => 'test_type', 'message' => '']]
-        ];
-    }
-
-    /**
-     * Test 'set' method with wrong params
-     *
-     * @dataProvider setNegativeProvider
-     * @param object $data
-     */
-    public function testSetNegative($data)
-    {
-        $flash = new Flash();
-
-        $this->expectException(InvalidArgumentException::class);
-
-        $flash->set($data->type, $data->message);
-    }
-
-    /**
-     * Provide data for testing wrong set
-     *
-     * @return array
-     */
-    public function setNegativeProvider()
-    {
-        return [
-            [(object)['type' => '', 'message' => 'Test message']]
-        ];
-    }
-
-    /**
-     * Assert that flash is not set
-     *
-     * @param Flash $flash
-     */
-    public function assertFlashEmpty($flash)
-    {
-        $this->assertFalse(isset($_SESSION['flash']), "Session flash variable should be empty");
+        $session = [];
+        
+        $flash = new Flash($session);
+        
         $this->assertFalse($flash->isIssued(), "Flash should not be issued");
         $this->assertEmpty($flash->get(), "Flash should be empty");
         $this->assertEmpty($flash->getType(), "Flash type should not be set");
-        $this->assertEmpty($flash->getMessage(), "Message should be empty");
-        $this->assertEmpty((string)$flash, "Flash should be empty");
+        $this->assertEquals('', $flash->getMessage(), "Message should be empty");
+        $this->assertEquals('', (string)$flash, "Flash should be empty");
+        
+        $this->assertArrayNotHasKey('flash', $session); // Calling get will clear the session data
+    }
+    
+    public function testGetWithExistingFlash()
+    {
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+        
+        $this->assertTrue($flash->isIssued());
+        $this->assertEquals((object)['type' => 'notice', 'message' => 'Foo bar zoo'], $flash->get());
+        $this->assertEquals('notice', $flash->getType());
+        $this->assertEquals('Foo bar zoo', $flash->getMessage());
+        $this->assertEquals('Foo bar zoo', (string)$flash);
+        
+        $this->assertArrayNotHasKey('flash', $session);
     }
 
-    /**
-     * Assert that flash is issued
-     *
-     * @param Flash $flash
-     * @param object $data
-     */
-    public function assertFlashIsIssued($flash, $data)
+    public function testExistingFlashWithoutGet()
     {
-        $this->assertEquals($data, $_SESSION['flash'], "Flash data was not set correctly");
-        $this->assertTrue($flash->isIssued(), "Flash should be issued");
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+        
+        $this->assertTrue($flash->isIssued());
+        
+        $this->assertArrayHasKey('flash', $session);
+        $this->assertEquals(['type' => 'notice', 'message' => 'Foo bar zoo'], $session['flash']);
     }
-
-    /**
-     * Assert that flash data is correct
-     *
-     * @param Flash $flash
-     * @param object $data 
-     */
-    public function assertFlashDataCorrect($flash, $data)
+    
+    public function testSetFlash()
     {
-        $this->assertEquals($data->type, $flash->getType(), "Type was not got correctly");
-        $this->assertEquals($data->message, $flash->getMessage(), "Message was not got correctly");
-        $this->assertEquals($data->message, (string)$flash, "Message was not got correctly when presenting flash as string");
+        $session = [];
+        $flash = new Flash($session);
+        
+        $flash->set('info', 'just smile');
+        
+        $this->assertEquals(['flash' => ['type' => 'info', 'message' => 'just smile']], $session);
+        
+        $this->assertEquals((object)['type' => 'info', 'message' => 'just smile'], $flash->get());
+    }
+    
+    public function testClear()
+    {
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+        
+        $flash->clear();
+        
+        $this->assertEmpty($flash->get());
+        $this->assertEmpty($session);
+    }
+    
+    public function testClearAfterGet()
+    {
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+
+        $this->assertEquals((object)['type' => 'notice', 'message' => 'Foo bar zoo'], $flash->get());
+        
+        $flash->clear();
+        
+        $this->assertEmpty($flash->get());
+        $this->assertEmpty($session);
+    }
+    
+    public function testClearAfterSet()
+    {
+        $session = [];
+        $flash = new Flash($session);
+        
+        $flash->set('info', 'just smile');
+        
+        $this->assertEquals(['flash' => ['type' => 'info', 'message' => 'just smile']], $session);
+        
+        $flash->clear();
+        
+        $this->assertFalse($flash->isIssued());
+        $this->assertEmpty($session);
+    }
+    
+    public function testReissueAfterGet()
+    {
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+        
+        $this->assertEquals((object)['type' => 'notice', 'message' => 'Foo bar zoo'], $flash->get());
+        $this->assertEmpty($session);
+        
+        $flash->reissue();
+        
+        $this->assertArrayHasKey('flash', $session);
+        $this->assertEquals(['flash' => ['type' => 'notice', 'message' => 'Foo bar zoo']], $session);
+    }
+    
+    public function testReissueBeforeGet()
+    {
+        $session = [
+            'flash' => [
+                'type' => 'notice',
+                'message' => 'Foo bar zoo'
+            ]
+        ];
+        
+        $flash = new Flash($session);
+        
+        $flash->reissue();
+        
+        $this->assertEquals((object)['type' => 'notice', 'message' => 'Foo bar zoo'], $flash->get());
+        
+        $this->assertArrayHasKey('flash', $session);
+        $this->assertEquals(['flash' => ['type' => 'notice', 'message' => 'Foo bar zoo']], $session);
     }
 }
