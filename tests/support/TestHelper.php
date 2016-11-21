@@ -32,7 +32,7 @@ trait TestHelper
      * Get mock for controller
      *
      * @param array $methods  Methods to mock
-     * @return Controller|\PHPUnit_Framework_MockObject_MockObject
+     * @return Controller|Controller\Session|Controller\View\Twig|\PHPUnit_Framework_MockObject_MockObject
      */
     public function getController($methods = [], $mockClassName = null)
     {

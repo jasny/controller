@@ -2,7 +2,6 @@
 
 namespace Jasny\Controller\View;
 
-use Jasny\Controller\Session\Flash;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -16,7 +15,7 @@ trait Twig
      */
     protected $twig;
 
-    
+
     /**
      * Get server request
      * @return ServerRequestInterface
@@ -31,36 +30,54 @@ trait Twig
      */
     abstract public function output($data, $format = null);
 
-    
+
     /**
      * Get path of the view files
-     * 
+     *
      * @return string
      */
     protected function getViewPath()
     {
         return getcwd();
     }
+
+    /**
+     * Assert valid variable, function and filter name
+     * 
+     * @param string $name
+     * @throws \InvalidArgumentException
+     */
+    protected function assertViewVariableName($name)
+    {
+        if (!is_string($name)) {
+            $type = (is_object($name) ? get_class($name) . ' ' : '') . gettype($name);
+            throw new \InvalidArgumentException("Expected name to be a string, not a $type");
+        }
+
+        if (!preg_match('/^[a-z]\w*$/i', $name)) {
+            throw new \InvalidArgumentException("Invalid name '$name'");
+        }
+    }
     
     /**
      * Add a global variable to the view.
-     * 
+     *
      * @param string $name   Variable name
      * @param mixed  $value
      * @return $this
      */
     public function setViewVariable($name, $value)
     {
-        if (!$name) throw new \InvalidArgumentException("Name should not be empty");        
+        $this->assertViewVariableName($name);
 
         $this->getTwig()->addGlobal($name, $value);
 
         return $this;
     }
-    
+
     /**
      * Expose a function to the view.
-     * 
+     *
      * @param string      $name      Function name
      * @param string|null $function
      * @param string      $as        'function' or 'filter'
@@ -68,16 +85,19 @@ trait Twig
      */
     public function setViewFunction($name, $function = null, $as = 'function')
     {
+        $this->assertViewVariableName($name);
+        
         if ($as === 'function') {
             $function = new \Twig_SimpleFunction($name, $function ?: $name);
             $this->getTwig()->addFunction($function);
         } elseif ($as === 'filter') {
-            $filter = \Twig_SimpleFilter($name, $function ?: $name);
+            $filter = new \Twig_SimpleFilter($name, $function ?: $name);
             $this->getTwig()->addFilter($filter);
         } else {
-            throw new \InvalidArgumentException("You should create either function or filter, not '$as'");
+            $not = is_string($as) ? "'$as'" : 'a ' . gettype($as);
+            throw new \InvalidArgumentException("You should create either a 'function' or 'filter', not $not");
         }
-        
+
         return $this;
     }
 
@@ -86,11 +106,11 @@ trait Twig
      *
      * @return \Twig_Environment
      */
-    protected function createTwigEnvironment()
+    public function createTwigEnvironment()
     {
         $path = $this->getViewPath();
         $loader = new \Twig_Loader_Filesystem($path);
-        
+
         return new \Twig_Environment($loader);
     }
 
@@ -104,16 +124,17 @@ trait Twig
         $extensions = ['DateExtension', 'PcreExtension', 'TextExtension', 'ArrayExtension'];
         foreach ($extensions as $name) {
             $class = "Jasny\Twig\\$name";
-            
+
             if (class_exists($class)) {
                 $this->twig->addExtension(new $class());
             }
         }
+
+        $this->twig->addGlobal('current_url', $this->getRequest()->getUri());
         
-        $uri = $this->getRequest()->getUri();
-        
-        $this->setViewVariable('current_url', $uri);
-        $this->setViewVariable('flash', new Flash());
+        if (method_exists($this, 'flash')) {
+            $this->twig->addGlobal('flash', $this->flash());
+        }
     }
 
     /**
@@ -126,10 +147,10 @@ trait Twig
         if (!isset($this->twig)) {
             $this->initTwig();
         }
-        
+
         return $this->twig;
     }
-    
+
 
     /**
      * View rendered template
