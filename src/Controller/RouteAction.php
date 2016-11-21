@@ -91,7 +91,7 @@ trait RouteAction
      * }
      * </code>
      */
-    protected function beforeAction()
+    protected function beforeActionRun()
     {
     }
     
@@ -109,7 +109,7 @@ trait RouteAction
             return $this->notFound();
         }
 
-        $this->beforeAction();
+        $this->beforeActionRun();
         
         if ($this->isSuccessful()) {
             $args = isset($route->args) ? $route->args
