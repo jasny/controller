@@ -13,6 +13,36 @@ class OutputTest extends \PHPUnit_Framework_TestCase
 {
     use TestHelper;
 
+    
+    public function getSetResponseHeaderProvider()
+    {
+        return [
+            [true, 'withHeader'],
+            [false, 'withAddedHeader']
+        ];
+    }
+    
+    /**
+     * @dataProvider getSetResponseHeaderProvider
+     * 
+     * @param boolean $replace
+     * @param string  $method
+     */
+    public function testSetResponseHeader($replace, $method)
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $finalResponse = $this->createMock(ResponseInterface::class);
+        
+        $response->expects($this->once())->method($method)->with('Foo', 'bar')->willReturn($finalResponse);
+        
+        $controller = $this->getController(['getResponse', 'setResponse']);
+        
+        $controller->expects($this->once())->method('getResponse')->willReturn($response);
+        $controller->expects($this->once())->method('setResponse')->with($finalResponse);
+        
+        $controller->setResponseHeader('Foo', 'bar', $replace);
+    }
+    
     /**
      * Test function respondWith
      *

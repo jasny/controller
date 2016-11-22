@@ -47,7 +47,7 @@ trait Output
     public function setResponseHeader($header, $value, $overwrite = true)
     {
         $fn = $overwrite ? 'withHeader' : 'withAddedHeader';
-        $response = $this->getResponse()->$fn($value, $header);
+        $response = $this->getResponse()->$fn($header, $value);
         
         $this->setResponse($response);
     }
