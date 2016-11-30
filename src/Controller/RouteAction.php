@@ -11,6 +11,12 @@ use Psr\Http\Message\ResponseInterface;
 trait RouteAction
 {
     /**
+     * @var boolean
+     */
+    protected $actionCancelled = false;
+    
+    
+    /**
      * Get request, set for controller
      *
      * @return ServerRequestInterface
@@ -78,7 +84,6 @@ trait RouteAction
     
     /**
      * Called before executing the action.
-     * If the response is no longer a success statuc (>= 300), the action will not be executed.
      * 
      * <code>
      * protected function beforeAction()
@@ -91,8 +96,35 @@ trait RouteAction
      * }
      * </code>
      */
-    protected function beforeActionRun()
+    protected function before()
     {
+    }
+    
+    /**
+     * Called before executing the action.
+     */
+    protected function after()
+    {
+    }
+    
+    /**
+     * Cancel the action
+     * 
+     * @return boolean
+     */
+    public function cancel()
+    {
+        $this->actionCancelled = true;
+    }
+
+    /**
+     * Check if the action is cancelled
+     * 
+     * @return boolean
+     */
+    public function isCancelled()
+    {
+        return $this->actionCancelled;
     }
     
     /**
@@ -109,14 +141,16 @@ trait RouteAction
             return $this->notFound();
         }
 
-        $this->beforeActionRun();
+        $this->before();
         
-        if ($this->isSuccessful()) {
+        if (!$this->isCancelled()) {
             $args = isset($route->args) ? $route->args
                 : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
 
             call_user_func_array([$this, $method], $args);
         }
+        
+        $this->after();
     }
 
     /**
@@ -151,3 +185,4 @@ trait RouteAction
         return $args;
     }
 }
+
