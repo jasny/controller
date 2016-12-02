@@ -30,7 +30,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
     protected function getController($methods = array(), $className = null)
     {
         return $this->_getController(
-            array_merge($methods, ['getRequest', 'defaultAction', 'runTestAction', 'notFound', 'isSuccessful']),
+            array_merge($methods, ['getRequest', 'defaultAction', 'runTestAction', 'notFound', 'before', 'after']),
             $className
         );
     }
@@ -40,9 +40,9 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
     public function actionProvider()
     {
         return [
-            [(object)['args' => [1]], 'defaultAction', [1]],
-            [(object)['action' => 'test-run'], 'testRunAction', []],
-            [(object)['action' => 'non-existent'], 'notFound', []]
+            [(object)['args' => ['woo']], 'defaultAction', ['woo']],
+            [(object)['action' => 'test-run'], 'testRunAction'],
+            [(object)['action' => 'non-existent'], 'notFound']
         ];
     }
     
@@ -54,7 +54,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
      * @param string $method
      * @param array  $args
      */
-    public function testRunAction($route, $method, array $args)
+    public function testRunAction($route, $method, array $args = [])
     {
         $request = $this->createMock(ServerRequestInterface::class);
         $request->method('getAttribute')->with('route')->willReturn($route);
@@ -63,10 +63,14 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
         
         $controller = $this->getController();
         $controller->expects($this->any())->method('getRequest')->willReturn($request);
-        $controller->expects($method !== 'notFound' ? $this->once() : $this->never())->method('isSuccessful')
-            ->willReturn(true);
         
-        $controller->expects($this->once())->method($method)->with(...$args);
+        if ($method === 'notFound') {
+            $controller->expects($this->once())->method($method)->with(...$args);
+        } else {
+            $controller->expects($this->once())->method('before')->id('before');
+            $controller->expects($this->once())->method($method)->id('action')->after('before')->with(...$args);
+            $controller->expects($this->once())->method('after')->after('action');
+        }
         
         foreach (['defaultAction', 'runTestAction', 'notFound'] as $fn) {
             if ($fn !== $method) {
@@ -108,8 +112,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
         
         $controller = $this->getController();
         $controller->expects($this->any())->method('getRequest')->willReturn($request);
-        $controller->expects($this->once())->method('isSuccessful')->willReturn(true);
-        
+
         $controller->expects($this->once())->method('defaultAction')->with(...$expect);
         $controller->expects($this->never())->method('runTestAction');
         $controller->expects($this->never())->method('notFound');
@@ -158,20 +161,26 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
         
         $controller = $this->getController([], 'RunMissingArgumentController');
         $controller->expects($this->any())->method('getRequest')->willReturn($request);
-        $controller->expects($this->once())->method('isSuccessful')->willReturn(true);
         
         $controller->run();
     }
 
-    public function testSkipActionIfNotSuccessful()
+    public function testCancel()
     {
         $request = $this->createMock(ServerRequestInterface::class);
         $request->method('getAttribute')->with('route')->willReturn((object)[]);
 
         $controller = $this->getController();
-        $controller->expects($this->any())->method('getRequest')->willReturn($request);
-        $controller->expects($this->once())->method('isSuccessful')->willReturn(false);
-
+        $controller->method('getRequest')->willReturn($request);
+        
+        $controller->expects($this->once())->method('before')->willReturnCallback(\Closure::bind(function() {
+            $this->cancel();
+        }, $controller));
+        
+        $controller->expects($this->never())->method('defaultAction');
+        
+        $controller->expects($this->once())->method('after');
+        
         $controller->run();
     }
 }

@@ -11,6 +11,12 @@ use Psr\Http\Message\ResponseInterface;
 trait RouteAction
 {
     /**
+     * @var boolean
+     */
+    protected $actionCancelled = false;
+    
+    
+    /**
      * Get request, set for controller
      *
      * @return ServerRequestInterface
@@ -31,15 +37,8 @@ trait RouteAction
      * @param int    $code     HTTP status code
      */
     abstract public function notFound($message = '', $code = 404);
+    
 
-    /**
-     * Check if response is 2xx succesful, or empty
-     * 
-     * @return boolean
-     */
-    abstract public function isSuccessful();
-    
-    
     /**
      * Get the route
      * 
@@ -78,7 +77,7 @@ trait RouteAction
     
     /**
      * Called before executing the action.
-     * If the response is no longer a success statuc (>= 300), the action will not be executed.
+     * @codeCoverageIgnore
      * 
      * <code>
      * protected function beforeAction()
@@ -91,8 +90,34 @@ trait RouteAction
      * }
      * </code>
      */
-    protected function beforeActionRun()
+    protected function before()
     {
+    }
+    
+    /**
+     * Called before executing the action.
+     * @codeCoverageIgnore
+     */
+    protected function after()
+    {
+    }
+    
+    /**
+     * Cancel the action
+     */
+    public function cancel()
+    {
+        $this->actionCancelled = true;
+    }
+
+    /**
+     * Check if the action is cancelled
+     * 
+     * @return boolean
+     */
+    public function isCancelled()
+    {
+        return $this->actionCancelled;
     }
     
     /**
@@ -109,20 +134,22 @@ trait RouteAction
             return $this->notFound();
         }
 
-        $this->beforeActionRun();
+        $this->before();
         
-        if ($this->isSuccessful()) {
+        if (!$this->isCancelled()) {
             $args = isset($route->args) ? $route->args
                 : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
 
             call_user_func_array([$this, $method], $args);
         }
+        
+        $this->after();
     }
 
     /**
      * Get the arguments for a function from a route using reflection
      * 
-     * @param object $route
+     * @param \stdClass                   $route
      * @param \ReflectionFunctionAbstract $refl
      * @return array
      */
@@ -151,3 +178,4 @@ trait RouteAction
         return $args;
     }
 }
+
