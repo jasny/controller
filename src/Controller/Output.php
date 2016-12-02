@@ -377,12 +377,12 @@ trait Output
     }
 
     /**
-     * Output result
-     *
-     * @param mixed  $data
-     * @param string $format  Output format as MIME or extension
+     * Set the content type for the output
+     * 
+     * @param string $format
+     * @return string
      */
-    public function output($data, $format = null)
+    protected function outputContentType($format)
     {
         if (!isset($format)) {
             $contentType = $this->getResponse()->getHeaderLine('Content-Type');
@@ -396,6 +396,19 @@ trait Output
             $contentType = $this->getContentType($format);
             $this->setResponseHeader('Content-Type', $contentType);
         }
+        
+        return $contentType;
+    }
+    
+    /**
+     * Output result
+     *
+     * @param mixed  $data
+     * @param string $format  Output format as MIME or extension
+     */
+    public function output($data, $format = null)
+    {
+        $contentType = $this->outputContentType($format);
 
         try {
             $content = $this->serializeData($data, $contentType);
