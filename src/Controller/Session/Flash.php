@@ -8,7 +8,7 @@ namespace Jasny\Controller\Session;
 class Flash
 {
     /**
-     * @var array
+     * @var array|null
      */
     protected $data;
     

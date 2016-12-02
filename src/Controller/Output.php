@@ -290,7 +290,8 @@ trait Output
      */
     protected function getContentType($format)
     {
-        if (\Jasny\str_contains($format, '/')) { // Already MIME
+        // Check if it's already MIME
+        if (\Jasny\str_contains($format, '/')) {
             return $format;
         }
         

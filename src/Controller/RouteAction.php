@@ -104,8 +104,6 @@ trait RouteAction
     
     /**
      * Cancel the action
-     * 
-     * @return boolean
      */
     public function cancel()
     {
@@ -151,7 +149,7 @@ trait RouteAction
     /**
      * Get the arguments for a function from a route using reflection
      * 
-     * @param object $route
+     * @param \stdClass                   $route
      * @param \ReflectionFunctionAbstract $refl
      * @return array
      */

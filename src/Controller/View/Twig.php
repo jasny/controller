@@ -18,6 +18,7 @@ trait Twig
 
     /**
      * Get server request
+     * 
      * @return ServerRequestInterface
      */
     abstract public function getRequest();
@@ -27,6 +28,7 @@ trait Twig
      *
      * @param mixed  $data
      * @param string $format  Output format as MIME or extension
+     * @return void
      */
     abstract public function output($data, $format = null);
 
