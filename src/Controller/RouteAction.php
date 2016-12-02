@@ -77,6 +77,7 @@ trait RouteAction
     
     /**
      * Called before executing the action.
+     * @codeCoverageIgnore
      * 
      * <code>
      * protected function beforeAction()
@@ -95,6 +96,7 @@ trait RouteAction
     
     /**
      * Called before executing the action.
+     * @codeCoverageIgnore
      */
     protected function after()
     {
