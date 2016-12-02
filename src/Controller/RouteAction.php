@@ -37,15 +37,8 @@ trait RouteAction
      * @param int    $code     HTTP status code
      */
     abstract public function notFound($message = '', $code = 404);
+    
 
-    /**
-     * Check if response is 2xx succesful, or empty
-     * 
-     * @return boolean
-     */
-    abstract public function isSuccessful();
-    
-    
     /**
      * Get the route
      * 
