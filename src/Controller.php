@@ -2,13 +2,14 @@
 
 namespace Jasny;
 
+use ControllerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Controller
+ * Controller base class
  */
-abstract class Controller
+abstract class Controller implements ControllerInterface
 {
     use Controller\Input,
         Controller\Output,
@@ -59,7 +60,7 @@ abstract class Controller
     /**
      * Get response. set for controller
      *
-     * @return ResponseInterface
+     * @param ResponseInterface $response
      */
     public function setResponse(ResponseInterface $response)
     {

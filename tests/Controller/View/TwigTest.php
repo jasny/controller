@@ -9,6 +9,7 @@ use Psr\Http\Message\UriInterface;
 use Jasny\Controller\TestHelper;
 
 /**
+ * @covers Jasny\Controller\View
  * @covers Jasny\Controller\View\Twig
  */
 class TwigTest extends \PHPUnit_Framework_TestCase
