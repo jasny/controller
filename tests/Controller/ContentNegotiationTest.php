@@ -5,7 +5,7 @@ namespace Jasny\Controller;
 use Jasny\Controller\ContentNegotiation;
 use Psr\Http\Message\ServerRequestInterface;
 use Jasny\Controller\TestHelper;
-use Negotiation\Negotiator;
+use Negotiation;
 use Negotiation\BaseAccept;
 
 /**
@@ -14,36 +14,6 @@ use Negotiation\BaseAccept;
 class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
 {
     use TestHelper;
-
-    /**
-     * Test negotiation
-     *
-     * @dataProvider negotiateProvider
-     * @param string $result
-     * @param array $header
-     * @param array $priorities
-     */
-    public function testNegotiate($method, $negotiatorClass, $type, $expected, $headerName, array $headerValue, array $priorities)
-    {
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getHeader')->with($this->equalTo($headerName))->will($this->returnValue($headerValue));
-
-        $expectedObj = $this->createMock(BaseAccept::class);
-        $expectedObj->expects($this->once())->method('getType')->will($this->returnValue($expected));
-
-        $negotiator = $this->createMock($negotiatorClass);
-        $negotiator->expects($this->once())->method('getBest')->with($this->equalTo(join(', ', $headerValue)), $this->equalTo($priorities))->will($this->returnValue($expectedObj));
-
-        $trait = $this->getController(['getRequest', 'getNegotiator']);
-        $trait->expects($this->once())->method('getRequest')->will($this->returnValue($request));
-        $trait->expects($this->once())->method('getNegotiator')->with($this->equalTo($type))->will($this->returnValue($negotiator));
-
-        $buildClass = $this->callPrivateMethod($trait, 'getNegotiatorName', [$type]);
-        $result = $trait->{$method}($priorities);
-
-        $this->assertEquals($buildClass, $negotiatorClass, "Obtained wrong negotiator class");
-        $this->assertEquals($result, $expected, "Obtained result does not match expected result");
-    }
 
     /**
      * Provide data for testing negotiation
@@ -55,7 +25,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
         return [
             [
                 'negotiateContentType',
-                'Negotiation\\Negotiator',
+                Negotiation\Negotiator::class,
                 '',
                 'text/html',
                 'Accept',
@@ -64,7 +34,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateContentType',
-                'Negotiation\\Negotiator',
+                Negotiation\Negotiator::class,
                 '',
                 '',
                 'Accept',
@@ -73,7 +43,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateLanguage',
-                'Negotiation\\LanguageNegotiator',
+                Negotiation\LanguageNegotiator::class,
                 'language',
                 'en',
                 'Accept-Language',
@@ -82,7 +52,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateLanguage',
-                'Negotiation\\LanguageNegotiator',
+                Negotiation\LanguageNegotiator::class,
                 'language',
                 '',
                 'Accept-Language',
@@ -91,7 +61,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateEncoding',
-                'Negotiation\\EncodingNegotiator',
+                Negotiation\EncodingNegotiator::class,
                 'encoding',
                 'gzip',
                 'Accept-Encoding',
@@ -100,7 +70,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateEncoding',
-                'Negotiation\\EncodingNegotiator',
+                Negotiation\EncodingNegotiator::class,
                 'encoding',
                 '',
                 'Accept-Encoding',
@@ -109,7 +79,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateCharset',
-                'Negotiation\\CharsetNegotiator',
+                Negotiation\CharsetNegotiator::class,
                 'charset',
                 'utf-8',
                 'Accept-Charset',
@@ -118,7 +88,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
             ],
             [
                 'negotiateCharset',
-                'Negotiation\\CharsetNegotiator',
+                Negotiation\CharsetNegotiator::class,
                 'charset',
                 '',
                 'Accept-Charset',
@@ -128,6 +98,66 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
         ];
     }
 
+    /**
+     * Test negotiation
+     * @dataProvider negotiateProvider
+     * 
+     * @param string $method
+     * @param string $negotiatorClass
+     * @param string $type
+     * @param string $expected
+     * @param string $headerName
+     * @param array  $headerValue
+     * @param array  $priorities
+     */
+    public function testNegotiate(
+        $method,
+        $negotiatorClass,
+        $type,
+        $expected,
+        $headerName,
+        array $headerValue,
+        array $priorities
+    ) {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeader')->with($this->equalTo($headerName))
+            ->will($this->returnValue($headerValue));
+
+        $expectedObj = $this->createMock(BaseAccept::class);
+        $expectedObj->expects($this->once())->method('getType')->will($this->returnValue($expected));
+
+        $negotiator = $this->createMock($negotiatorClass);
+        $negotiator->expects($this->once())->method('getBest')
+            ->with($this->equalTo(join(', ', $headerValue)), $this->equalTo($priorities))
+            ->will($this->returnValue($expectedObj));
+
+        $trait = $this->getController(['getRequest', 'getNegotiator']);
+        $trait->expects($this->once())->method('getRequest')->will($this->returnValue($request));
+        $trait->expects($this->once())->method('getNegotiator')->with($this->equalTo($type))
+            ->will($this->returnValue($negotiator));
+
+        $buildClass = $this->callPrivateMethod($trait, 'getNegotiatorName', [$type]);
+        $result = $trait->{$method}($priorities);
+
+        $this->assertEquals($buildClass, $negotiatorClass, "Obtained wrong negotiator class");
+        $this->assertEquals($result, $expected, "Obtained result does not match expected result");
+    }
+
+    /**
+     * Test negotiation
+     * @dataProvider negotiateProvider
+     * 
+     * @param string $method
+     * @param string $negotiatorClass
+     * @param string $type
+     */
+    public function testGetNegotiator($method, $negotiatorClass, $type)
+    {
+        $controller = $this->getController();
+        
+        $this->assertInstanceOf($negotiatorClass, $this->callPrivateMethod($controller, 'getNegotiator', [$type]));
+    }
+    
     /**
      * Get the controller class
      *
