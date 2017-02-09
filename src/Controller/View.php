@@ -34,6 +34,7 @@ trait View
      * Get response. set for controller
      *
      * @param ResponseInterface $response
+     * @return void
      */
     abstract public function setResponse(ResponseInterface $response);
     
