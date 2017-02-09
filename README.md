@@ -180,15 +180,14 @@ class MyPageController extends Jasny\Controller
 
 The following methods for setting the output status are available
 
-+-------------------------+---------------------------------------------------------------------------+-----------------------------------------------------+
 | status code             | method                                                                    |                                                     |
-+-------------------------+---------------------------------------------------------------------------+-----------------------------------------------------+
+| ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
 | [200][]                 | `ok()`                                                                    |                                                     |
 | [201][]                 | `created(string $location = null)`                                        | Optionally set the `Location` header                |
 | [203][]                 | `accepted()`                                                              |                                                     |
 | [204][]                 | `noContent(int $code = 204)`                                              |                                                     |
 | [206][]                 | `partialContent(int $rangeFrom, int $rangeTo, int $totalSize)`            | Set the `Content-Range` and `Content-Length` header |
-| [30x][]                 | `redirect(string $url, int $code = 303)`                                  | Url for the `Location` header                       |
+| [30x][303]              | `redirect(string $url, int $code = 303)`                                  | Url for the `Location` header                       |
 | [303][]                 | `back()`                                                                  | Redirect to the referer*                            |
 | [304][]                 | `notModified()`                                                           |                                                     |
 | [40x][400]              | `badRequest(string $message, int $code = 400)`                            |                                                     |
@@ -199,12 +198,11 @@ The following methods for setting the output status are available
 | [409][]                 | `conflict(string $message)`                                               |                                                     |
 | [429][]                 | `tooManyRequests(string $message = "Too many requests")`                  |                                                     |
 | [5xx][500]              | `error(string $message = "An unexpected error occured", int $code = 500)` |                                                     |
-+-------------------------+---------------------------------------------------------------------------+-----------------------------------------------------+
 
 - Some methods take a `$message` argument. This will set the output.
 - If a method takes a `$code` argument, you can specify the status code. _Note that you can specify any status code,
   though only some should be used (don't use a 400 status with `redirect()`)._
-- The `back()` method will redirect to the referer, but only if the referer is from the same domain as the current url.
+- *The `back()` method will redirect to the referer, but only if the referer is from the same domain as the current url.
 
 [200]: https://httpstatuses.com/200
 [201]: https://httpstatuses.com/201
