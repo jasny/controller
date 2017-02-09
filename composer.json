@@ -23,12 +23,13 @@
     },
     "require-dev": {
         "jasny/php-code-quality": "^2.0",
-        "jasny/twig-extensions": "^1.0",
-        "twig/twig": "^1.26"
+        "jasny/view": "^1.0.0@beta"
     },
     "suggest": {
-        "twig/twig": "Needed to work with Twig templates",
-        "jasny/twig-extensions": "Useful extensions for Twig"
+        "jasny/view": "Use Twig or PHP templates with PSR-7 support",
+        "jasny/http-message": "A PSR-7 implementation for handling HTTP requests",
+        "jasny/router": "A versatile router with PSR-7 support",
+        "jasny/mvc": "Meta package for Jasny Router, Controller and View"
     },
     "autoload": {
         "psr-4": {
