@@ -38,7 +38,7 @@ class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
         $trait->expects($this->once())->method('getRequest')->will($this->returnValue($request));
         $trait->expects($this->once())->method('getNegotiator')->with($this->equalTo($type))->will($this->returnValue($negotiator));
 
-        $buildClass = $this->callProtectedMethod($trait, 'getNegotiatorName', [$type]);
+        $buildClass = $this->callPrivateMethod($trait, 'getNegotiatorName', [$type]);
         $result = $trait->{$method}($priorities);
 
         $this->assertEquals($buildClass, $negotiatorClass, "Obtained wrong negotiator class");
