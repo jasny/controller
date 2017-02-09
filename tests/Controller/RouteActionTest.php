@@ -14,7 +14,10 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
     use TestHelper {
         getController as private _getController;
     }
-    
+
+    /**
+     * @return string
+     */
     protected function getControllerClass()
     {
         return RouteActionController::class;
@@ -27,7 +30,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
      * @param string $className
      * @return RouteActionController|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected function getController($methods = array(), $className = null)
+    protected function getController($methods = [], $className = null)
     {
         return $this->_getController(
             array_merge($methods, ['getRequest', 'defaultAction', 'runTestAction', 'notFound', 'before', 'after']),
@@ -41,7 +44,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
     {
         return [
             [(object)['args' => ['woo']], 'defaultAction', ['woo']],
-            [(object)['action' => 'test-run'], 'testRunAction'],
+            [(object)['action' => 'run-test'], 'runTestAction'],
             [(object)['action' => 'non-existent'], 'notFound']
         ];
     }

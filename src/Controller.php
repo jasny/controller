@@ -2,7 +2,7 @@
 
 namespace Jasny;
 
-use ControllerInterface;
+use Jasny\ControllerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
