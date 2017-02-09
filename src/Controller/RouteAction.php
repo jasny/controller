@@ -105,10 +105,14 @@ trait RouteAction
     
     /**
      * Cancel the action
+     * 
+     * @return $this
      */
     public function cancel()
     {
         $this->actionCancelled = true;
+        
+        return $this;
     }
 
     /**
