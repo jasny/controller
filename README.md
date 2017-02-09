@@ -208,10 +208,10 @@ The following methods for setting the output status are available
 [200]: https://httpstatuses.com/200
 [201]: https://httpstatuses.com/201
 [203]: https://httpstatuses.com/203
-[204]: https://httpstatuses.com/200
-[206]: https://httpstatuses.com/200
-[303]: https://httpstatuses.com/200
-[304]: https://httpstatuses.com/200
+[204]: https://httpstatuses.com/204
+[206]: https://httpstatuses.com/206
+[303]: https://httpstatuses.com/303
+[304]: https://httpstatuses.com/304
 [400]: https://httpstatuses.com/400
 [401]: https://httpstatuses.com/401
 [402]: https://httpstatuses.com/402
