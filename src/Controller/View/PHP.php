@@ -3,25 +3,24 @@
 namespace Jasny\Controller\View;
 
 use Jasny\Controller\View;
-use Jasny\View\Twig as TwigView;
+use Jasny\View\PHP as PHPView;
 
 /**
- * View using Twig
+ * View using PHP
  */
-trait Twig
+trait PHP
 {
     use View;
     
     /**
      * Get the template engine abstraction
      * 
-     * @return TwigView
+     * @return PHPView
      */
     public function getViewer()
     {
         if (!isset($this->viewer)) {
-            $this->viewer = $this->createTwigView(['path' => $this->getViewPath()]);
-            $this->viewer->addDefaultExtensions();
+            $this->viewer = $this->createPHPView(['path' => $this->getViewPath()]);
         }
         
         return $this->viewer;
@@ -32,10 +31,10 @@ trait Twig
      * @ignore
      * @codeCoverageIgnore
      * 
-     * @return TwigView;
+     * @return PHPView;
      */
-    protected function createTwigView($options)
+    protected function createPHPView($options)
     {
-        return new TwigView($options);
+        return new PHPView($options);
     }
 }

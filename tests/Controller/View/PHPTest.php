@@ -3,13 +3,13 @@
 namespace Jasny\Controller\View;
 
 use Jasny\Controller\View;
-use Jasny\View\Twig as TwigView;
+use Jasny\View\PHP as PHPView;
 use Jasny\Controller\TestHelper;
 
 /**
- * @covers Jasny\Controller\View\Twig
+ * @covers Jasny\Controller\View\PHP
  */
-class TwigTest extends \PHPUnit_Framework_TestCase
+class PHPTest extends \PHPUnit_Framework_TestCase
 {
     use TestHelper {
         getController as private _getController;
@@ -20,7 +20,7 @@ class TwigTest extends \PHPUnit_Framework_TestCase
      */
     protected function getControllerClass()
     {
-        return View\Twig::class;
+        return View\PHP::class;
     }
     
     /**
@@ -32,7 +32,7 @@ class TwigTest extends \PHPUnit_Framework_TestCase
      */
     protected function getController($methods = [], $className = null)
     {
-        $controller = $this->_getController(array_merge($methods, ['createTwigView', 'getViewPath']), $className);
+        $controller = $this->_getController(array_merge($methods, ['createPHPView', 'getViewPath']), $className);
         $controller->method('getViewPath')->willReturn('/tmp');
         
         return $controller;
@@ -41,11 +41,10 @@ class TwigTest extends \PHPUnit_Framework_TestCase
     
     public function testGetViewer()
     {
-        $viewer = $this->createMock(TwigView::class);
-        $viewer->expects($this->once())->method('addDefaultExtensions');
+        $viewer = $this->createMock(PHPView::class);
         
         $controller = $this->getController();
-        $controller->method('createTwigView')->willReturn($viewer);
+        $controller->method('createPHPView')->willReturn($viewer);
         
         $this->assertSame($viewer, $controller->getViewer());
         

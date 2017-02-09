@@ -5,14 +5,14 @@ namespace Jasny;
 use Jasny\Controller;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Controller\TestHelper as ControllerTestHelper;
 
 /**
  * @covers Jasny\Controller
  */
 class ControllerTest extends \PHPUnit_Framework_TestCase
 {
-    use TestHelper;
+    use ControllerTestHelper;
     
     /**
      * Test running controller

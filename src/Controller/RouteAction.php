@@ -153,7 +153,7 @@ trait RouteAction
      * @param \ReflectionFunctionAbstract $refl
      * @return array
      */
-    protected function getFunctionArgs($route, \ReflectionFunctionAbstract $refl)
+    protected function getFunctionArgs(\stdClass $route, \ReflectionFunctionAbstract $refl)
     {
         $args = [];
         $params = $refl->getParameters();
