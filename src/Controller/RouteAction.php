@@ -35,6 +35,7 @@ trait RouteAction
      *
      * @param string $message
      * @param int    $code     HTTP status code
+     * @return void
      */
     abstract public function notFound($message = '', $code = 404);
     

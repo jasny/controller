@@ -32,7 +32,7 @@ trait Twig
      * @ignore
      * @codeCoverageIgnore
      * 
-     * @return TwigView;
+     * @return TwigView
      */
     protected function createTwigView($options)
     {

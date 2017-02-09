@@ -31,7 +31,7 @@ trait PHP
      * @ignore
      * @codeCoverageIgnore
      * 
-     * @return PHPView;
+     * @return PHPView
      */
     protected function createPHPView($options)
     {
