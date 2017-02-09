@@ -12,11 +12,23 @@ use Psr\Http\Message\ResponseInterface;
 trait View
 {
     /**
+     * @var ViewInterface 
+     */
+    protected $viewer;
+    
+    /**
      * Get server request
      * 
      * @return ServerRequestInterface
      */
     abstract public function getRequest();
+    
+    /**
+     * Get server request
+     * 
+     * @return ResponseInterface
+     */
+    abstract public function getResponse();
 
     /**
      * Get response. set for controller
@@ -25,12 +37,30 @@ trait View
      */
     abstract public function setResponse(ResponseInterface $response);
     
+    
     /**
      * Get the template engine abstraction
      * 
      * @return ViewInterface
      */
-    abstract public function getViewer();
+    public function getViewer()
+    {
+        if (!isset($this->viewer)) {
+            throw new \LogicException("Viewer has not been set");
+        }
+        
+        return $this->viewer;
+    }
+    
+    /**
+     * Get the template engine abstraction
+     * 
+     * @param ViewInterface $viewer
+     */
+    public function setViewer(ViewInterface $viewer)
+    {
+        $this->viewer = $viewer;
+    }
     
     
     /**
@@ -38,7 +68,7 @@ trait View
      *
      * @return string
      */
-    protected function getViewPath()
+    public function getViewPath()
     {
         return getcwd();
     }
@@ -51,13 +81,13 @@ trait View
      */
     public function view($name, array $context = [])
     {
-        $context += ['current_url', $this->getRequest()->getUri()];
+        $context += ['current_url' => $this->getRequest()->getUri()];
         
         if (method_exists($this, 'flash')) {
             $context += ['flash' => $this->flash()];
         }
         
-        $response = $this->getViewer()->view($this->getResponse(), $name, $context);
+        $response = $this->getViewer()->render($this->getResponse(), $name, $context);
         
         $this->setResponse($response);
     }
