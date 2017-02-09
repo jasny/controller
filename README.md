@@ -50,6 +50,9 @@ class MyPageController extends Jasny\Controller
 Note that the `run` method doesn't need to return anything. There are different methods to manipulate the response.
 Anything that is returned is simply ignored.
 
+Usage
+---
+
 ### Output
 
 When using PSR-7, you shouldn't use `echo`. Instead, the `output()` method can be used to output stuff. To output
