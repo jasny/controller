@@ -1,8 +1,8 @@
 <?php
 
-namespace Jasny\Controller;
+namespace Jasny\Traits;
 
-use Jasny\Controller;
+use Jasny\Traits;
 use Jasny\TestHelper as Base;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 
@@ -27,7 +27,7 @@ trait TestHelper
      * Get mock for controller
      *
      * @param array $methods  Methods to mock
-     * @return Controller|Controller\Session|Controller\View|MockObject
+     * @return Controller|Traits\Session|Traits\View|MockObject
      */
     public function getController($methods = [], $mockClassName = null)
     {

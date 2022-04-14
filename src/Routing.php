@@ -1,43 +1,35 @@
 <?php
+declare(strict_types=1);
 
-namespace Jasny\Controller;
+namespace Jasny;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Execute controller on given route
  */
-trait RouteAction
+trait Routing
 {
-    /**
-     * @var boolean
-     */
-    protected $actionCancelled = false;
-    
-    
     /**
      * Get request, set for controller
      *
      * @return ServerRequestInterface
      */
-    abstract public function getRequest();
+    abstract public function getRequest(): ServerRequestInterface;
 
     /**
-     * Get response. set for controller
-     *
-     * @return ResponseInterface
+     * Get response, set for controller
      */
-    abstract public function getResponse();
+    abstract public function getResponse(): ResponseInterface;
 
     /**
-     * Respond with a server error
+     * Respond with 404 not found
      *
-     * @param string $message
-     * @param int    $code     HTTP status code
-     * @return void
+     * @param int $code  HTTP status code
+     * @return $this
      */
-    abstract public function notFound($message = '', $code = 404);
+    abstract public function notFound(int $code = 404): static;
     
 
     /**
@@ -67,13 +59,11 @@ trait RouteAction
 
     /**
      * Get the method name of the action
-     * 
-     * @param string $action
-     * @return string
      */
-    protected function getActionMethod($action)
+    protected function getActionMethod(string $action): string
     {
-        return \Jasny\camelcase($action) . 'Action';
+        $sentence = preg_replace('/[\W_]+/', ' ', $action);
+        return lcfirst(str_replace(' ', '', ucwords($sentence))) . 'Action';
     }
     
     /**
@@ -81,84 +71,61 @@ trait RouteAction
      * @codeCoverageIgnore
      * 
      * <code>
-     * protected function beforeAction()
+     * protected function before()
      * {
-     *    $this->respondWith('json'); // Respond with JSON by default
-     * 
      *    if ($this->auth->getUser()->getCredits() <= 0) {
-     *        $this->paymentRequired();
+     *        return $this->paymentRequired()->output("Sorry, you're out of credits");
      *    }
      * }
      * </code>
+     *
+     * @return void|ResponseInterface|static
      */
     protected function before()
     {
     }
     
     /**
-     * Called before executing the action.
+     * Called after executing the action.
      * @codeCoverageIgnore
+     *
+     * @return void|ResponseInterface|static
      */
     protected function after()
     {
     }
-    
-    /**
-     * Cancel the action
-     * 
-     * @return $this
-     */
-    public function cancel()
-    {
-        $this->actionCancelled = true;
-        
-        return $this;
-    }
 
     /**
-     * Check if the action is cancelled
-     * 
-     * @return boolean
-     */
-    public function isCancelled()
-    {
-        return $this->actionCancelled;
-    }
-    
-    /**
      * Run the controller
-     *
-     * @return ResponseInterface
      */
-    public function run()
+    public function run(): ResponseInterface
     {
         $route = $this->getRoute();
         $method = $this->getActionMethod(isset($route->action) ? $route->action : 'default');
 
         if (!method_exists($this, $method)) {
-            return $this->notFound();
+            $this->notFound();
+            return $this->getResponse();
         }
 
-        $this->before();
+        $before = $this->before();
         
-        if (!$this->isCancelled()) {
-            $args = isset($route->args) ? $route->args
-                : $this->getFunctionArgs($route, new \ReflectionMethod($this, $method)); 
-
-            call_user_func_array([$this, $method], $args);
+        if ($before !== null) {
+            return $before instanceof ResponseInterface ? $before : $this->getResponse();
         }
-        
-        $this->after();
+
+        $args = $route->args ?? $this->getFunctionArgs($route, new \ReflectionMethod($this, $method));
+        $result = [$this, $method]($args);
+
+        $response = $this->after() ?? $result;
+
+        return $response instanceof ResponseInterface ? $response : $this->getResponse();
     }
 
     /**
-     * Get the arguments for a function from a route using reflection
-     * 
-     * @param \stdClass                   $route
-     * @param \ReflectionFunctionAbstract $refl
-     * @return array
+     * Get the arguments for a function from a route using reflection.
      */
-    protected function getFunctionArgs(\stdClass $route, \ReflectionFunctionAbstract $refl)
+    protected function getFunctionArgs(\stdClass $route, \ReflectionFunctionAbstract $refl): array
     {
         $args = [];
         $params = $refl->getParameters();

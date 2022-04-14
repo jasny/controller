@@ -1,6 +1,7 @@
 <?php
+declare(strict_types=1);
 
-namespace Jasny\Controller;
+namespace Jasny\Traits;
 
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -11,10 +12,8 @@ trait Input
 {
     /**
      * Get request, set for controller
-     *
-     * @return ServerRequestInterface
      */
-    abstract public function getRequest();
+    abstract protected function getRequest(): ServerRequestInterface;
     
     
     /**
@@ -25,37 +24,37 @@ trait Input
      *   $params = $this->getQueryParams();
      * 
      *   // Get specific parameters, specifying defaults for 'bar' and 'zoo'
-     *   list($foo, $bar, $zoo) = $this->getQueryParams(['foo', 'bar' => 10, 'zoo' => 'monkey']);
+     *   [$foo, $bar, $zoo] = $this->getQueryParams(['foo', 'bar' => 10, 'zoo' => 'monkey']);
      * </code>
-     * 
-     * @param array $list
-     * @return array
+     *
+     * @param array|null $list
+     * @return array<string,mixed>
      */
-    public function getQueryParams(array $list = null)
+    protected function getQueryParams(?array $list = null): array
     {
-        return isset($list)
+        return $list !== null
             ? $this->listQueryParams($list)
-            : (array)$this->getRequest()->getQueryParams();
+            : $this->getRequest()->getQueryParams();
     }
     
     /**
      * Apply list to query params
      * 
      * @param array $list
-     * @return array
+     * @return array<string,mixed>
      */
-    protected function listQueryParams(array $list)
+    private function listQueryParams(array $list): array
     {
         $result = [];
         $params = $this->getRequest()->getQueryParams();
         
         foreach ($list as $key => $value) {
-            if (is_int($key)) {
+            if (!is_string($key)) {
                 $key = $value;
                 $value = null;
             }
             
-            $result[] = isset($params[$key]) ? $params[$key] : $value;
+            $result[] = $params[$key] ?? $value;
         }
         
         return $result;
@@ -63,15 +62,10 @@ trait Input
     
     /**
      * Check if the request has a query parameter
-     * 
-     * @param array $param
-     * @return boolean
      */
-    public function hasQueryParam($param)
+    protected function hasQueryParam(string $param): bool
     {
-        $params = $this->getQueryParams();
-        
-        return isset($params[$param]);
+        return isset($this->getQueryParams()[$param]);
     }
     
     /**
@@ -79,17 +73,15 @@ trait Input
      * 
      * Optionally apply filtering to the value.
      * @link http://php.net/manual/en/filter.filters.php
-     * 
-     * @param array  $param
-     * @param string $default
-     * @param int    $filter
-     * @param mixed  $filterOptions
-     * @return mixed
      */
-    public function getQueryParam($param, $default = null, $filter = null, $filterOptions = null)
-    {
+    protected function getQueryParam(
+        string $param,
+        mixed $default = null,
+        ?int $filter = null,
+        array|int $filterOptions = 0
+    ): mixed {
         $params = $this->getQueryParams();
-        $value = isset($params[$param]) ? $params[$param] : $default;
+        $value = $params[$param] ?? $default;
         
         if (isset($filter) && isset($value)) {
             $value = filter_var($value, $filter, $filterOptions);
@@ -102,15 +94,15 @@ trait Input
     /**
      * Get parsed body and uploaded files as input
      * 
-     * @return array|mixed
+     * @return array|object|null
      */
-    public function getInput()
+    protected function getInput(): array|null|object
     {
         $data = $this->getRequest()->getParsedBody();
         
         if (is_array($data)) {
             $files = $this->getRequest()->getUploadedFiles();
-            $data = array_replace_recursive($data, (array)$files);
+            $data = array_replace_recursive($data, $files);
         }
         
         return $data;

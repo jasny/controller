@@ -1,6 +1,7 @@
 <?php
+declare(strict_types=1);
 
-namespace Jasny\Controller;
+namespace Jasny\Traits;
 
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -11,18 +12,14 @@ trait CheckRequest
 {
     /**
      * Get request, set for controller
-     *
-     * @return ServerRequestInterface
      */
-    abstract public function getRequest();
+    abstract protected function getRequest(): ServerRequestInterface;
     
     
     /**
      * Check if request is GET request
-     *
-     * @return boolean
      */
-    public function isGetRequest()
+    protected function isGetRequest(): bool
     {
         $method = $this->getRequest()->getMethod();
 
@@ -31,40 +28,32 @@ trait CheckRequest
 
     /**
      * Check if request is POST request
-     *
-     * @return boolean
      */
-    public function isPostRequest()
+    protected function isPostRequest(): bool
     {
         return $this->getRequest()->getMethod() === 'POST';
     }
 
     /**
      * Check if request is PUT request
-     *
-     * @return boolean
      */
-    public function isPutRequest()
+    protected function isPutRequest(): bool
     {
         return $this->getRequest()->getMethod() === 'PUT';
     }
 
     /**
      * Check if request is DELETE request
-     *
-     * @return boolean
      */
-    public function isDeleteRequest()
+    protected function isDeleteRequest(): bool
     {
         return $this->getRequest()->getMethod() === 'DELETE';
     }
     
     /**
      * Check if request is HEAD request
-     *
-     * @return boolean
      */
-    public function isHeadRequest()
+    protected function isHeadRequest(): bool
     {
         return $this->getRequest()->getMethod() === 'HEAD';
     }
@@ -72,10 +61,8 @@ trait CheckRequest
 
     /**
      * Returns the HTTP referer if it is on the current host
-     *
-     * @return string
      */
-    public function getLocalReferer()
+    protected function getLocalReferer(): string
     {
         $request = $this->getRequest();
         $referer = $request->getHeaderLine('HTTP_REFERER');

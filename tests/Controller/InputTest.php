@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Controller;
+namespace Jasny\Traits;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\Input

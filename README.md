@@ -153,7 +153,7 @@ class MyPageController extends Jasny\Controller
 
         // Create something ...
         
-        $this->setResponseHeader("Location: http://www.example.com/foo/something");
+        $this->header("Location: http://www.example.com/foo/something");
         $this->respondWith(201);
         $this->output($something, 'json');
     }
@@ -235,7 +235,7 @@ class MyPageController extends Jasny\Controller
 {
     public function run()
     {
-        $this->setResponseHeader("Content-Language", "nl");
+        $this->header("Content-Language", "nl");
         // ...
     }
 }

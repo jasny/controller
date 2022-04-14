@@ -1,11 +1,11 @@
 <?php
 
-namespace Jasny\Controller\View;
+namespace Jasny\Traits\View;
 
-use Jasny\Controller\View;
+use Jasny\Traits\View;
 use Jasny\ViewInterface;
-use Jasny\Controller\TestHelper;
-use Jasny\Controller\Session\Flash;
+use Jasny\Traits\TestHelper;
+use Jasny\Traits\Session\Flash;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;

@@ -1,6 +1,10 @@
 <?php
+declare(strict_types=1);
 
-namespace Jasny\Controller;
+namespace Jasny\Traits;
+
+use Negotiation\AbstractNegotiator;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Controller methods to negotiate content
@@ -9,10 +13,8 @@ trait ContentNegotiation
 {
     /**
      * Get request, set for controller
-     *
-     * @return ServerRequestInterface
      */
-    abstract public function getRequest();
+    abstract protected function getRequest(): ServerRequestInterface;
 
     /**
      * Pick best content type
@@ -20,7 +22,7 @@ trait ContentNegotiation
      * @param array $priorities
      * @return string
      */
-    public function negotiateContentType(array $priorities)
+    protected function negotiateContentType(array $priorities)
     {
         return $this->negotiate($priorities);
     }
@@ -31,7 +33,7 @@ trait ContentNegotiation
      * @param array $priorities
      * @return string
      */
-    public function negotiateLanguage(array $priorities)
+    protected function negotiateLanguage(array $priorities)
     {
         return $this->negotiate($priorities, 'language');
     }
@@ -42,7 +44,7 @@ trait ContentNegotiation
      * @param array $priorities
      * @return string
      */
-    public function negotiateEncoding(array $priorities)
+    protected function negotiateEncoding(array $priorities)
     {
         return $this->negotiate($priorities, 'encoding');
     }
@@ -53,7 +55,7 @@ trait ContentNegotiation
      * @param array $priorities
      * @return string
      */
-    public function negotiateCharset(array $priorities)
+    protected function negotiateCharset(array $priorities)
     {
         return $this->negotiate($priorities, 'charset');
     }
@@ -84,25 +86,11 @@ trait ContentNegotiation
 
     /**
      * Get negotiation library instance
-     *
-     * @param string $type  Negotiator type
-     * @return Negotiation\AbstractNegotiator
      */
-    protected function getNegotiator($type = '')
+    protected function getNegotiator(string $type = ''): AbstractNegotiator
     {
-        $class = $this->getNegotiatorName($type);
+        $class = 'Negotiation\\' . ucfirst($type) . 'Negotiator';
 
         return new $class();
-    }
-
-    /**
-     * Get negotiator name
-     *
-     * @param string $type
-     * @return string
-     */
-    protected function getNegotiatorName($type = '')
-    {
-        return 'Negotiation\\' . ucfirst($type) . 'Negotiator';
     }
 }

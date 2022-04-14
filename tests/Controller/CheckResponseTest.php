@@ -1,10 +1,10 @@
 <?php
 
 use Psr\Http\Message\ResponseInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\CheckResponse
+ * @covers Jasny\Traits\CheckResponse
  */
 class ControllerTest extends PHPUnit_Framework_TestCase
 {

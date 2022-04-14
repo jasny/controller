@@ -1,8 +1,8 @@
 <?php
+declare(strict_types=1);
 
 namespace Jasny;
 
-use Jasny\ControllerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -11,30 +11,20 @@ use Psr\Http\Message\ResponseInterface;
  */
 abstract class Controller implements ControllerInterface
 {
-    use Controller\Input,
-        Controller\Output,
-        Controller\CheckRequest,
-        Controller\CheckResponse;
+    use Traits\Input,
+        Traits\Header,
+        Traits\Output,
+        Traits\CheckRequest,
+        Traits\CheckResponse;
     
-    /**
-     * Server request
-     * @var ServerRequestInterface
-     **/
-    protected $request = null;
-
-    /**
-     * Response
-     * @var ResponseInterface
-     **/
-    protected $response = null;
+    private ServerRequestInterface $request;
+    private ResponseInterface $response;
 
     
     /**
      * Get request, set for controller
-     *
-     * @return ServerRequestInterface
      */
-    public function getRequest()
+    protected function getRequest(): ServerRequestInterface
     {
         if (!isset($this->request)) {
             throw new \LogicException("Request not set, the controller has not been invoked");
@@ -44,11 +34,9 @@ abstract class Controller implements ControllerInterface
     }
 
     /**
-     * Get response. set for controller
-     *
-     * @return ResponseInterface
+     * Get response, set for controller
      */
-    public function getResponse()
+    protected function getResponse(): ResponseInterface
     {
         if (!isset($this->response)) {
             throw new \LogicException("Response not set, the controller has not been invoked");
@@ -58,39 +46,27 @@ abstract class Controller implements ControllerInterface
     }
 
     /**
-     * Get response. set for controller
-     *
-     * @param ResponseInterface $response
+     * Set the response
      */
-    public function setResponse(ResponseInterface $response)
+    protected function setResponse(ResponseInterface $response): void
     {
         $this->response = $response;
     }
-    
+
     /**
      * Run the controller
-     *
-     * @return ResponseInterface
      */
-    abstract public function run();
+    abstract protected function run(): void;
 
 
     /**
-     * Run the controller as function
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface      $response
-     * @return ResponseInterface
+     * Invoke the controller.
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
+    protected function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $this->request = $request;
         $this->response = $response;
 
-        if (method_exists($this, 'useSession')) {
-            $this->useSession();
-        }
-        
         $this->run();
         
         return $this->getResponse();
