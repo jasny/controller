@@ -1,9 +1,9 @@
 <?php
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
-use Jasny\Traits;
-use Jasny\TestHelper as Base;
+use Jasny\Controller\Traits;
+use Jasny\Controller\TestHelper as Base;
 use PHPUnit_Framework_MockObject_MockObject as MockObject;
 
 /**

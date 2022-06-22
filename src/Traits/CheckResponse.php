@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ResponseInterface;
 

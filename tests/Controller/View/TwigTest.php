@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Traits\View;
+namespace Jasny\Controller\Traits\View;
 
-use Jasny\Traits\View;
-use Jasny\View\Twig as TwigView;
-use Jasny\Traits\TestHelper;
+use Jasny\Controller\Traits\View;
+use Jasny\Controller\View\Twig as TwigView;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\View\Twig

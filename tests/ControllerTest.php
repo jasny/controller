@@ -2,10 +2,10 @@
 
 namespace Jasny;
 
-use Jasny\Traits;
+use Jasny\Controller\Traits;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Jasny\Traits\TestHelper as ControllerTestHelper;
+use Jasny\Controller\Traits\TestHelper as ControllerTestHelper;
 
 /**
  * @covers Jasny\Controller

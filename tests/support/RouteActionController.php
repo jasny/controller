@@ -1,13 +1,13 @@
 <?php
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
 /**
  * Class for testing 'RouteAction' trait
  */
 abstract class RouteActionController
 {
-    use \Jasny\Routing;
+    use Jasny\Controller\Controller\Routing;
     
     public function defaultAction($foo, $bar = null)
     {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
 use Negotiation\{AbstractNegotiator, Negotiator, LanguageNegotiator, EncodingNegotiator, CharsetNegotiator};
 use Psr\Http\Message\ServerRequestInterface;

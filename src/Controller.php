@@ -1,18 +1,19 @@
 <?php
 declare(strict_types=1);
 
-namespace Jasny;
+namespace Jasny\Controller;
 
-use Psr\Http\Message\ServerRequestInterface;
+use Jasny\Controller\Parameter\Parameter;
+use Jasny\Controller\Parameter\Path;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Controller base class
  */
-abstract class Controller implements ControllerInterface
+abstract class Controller
 {
-    use Traits\Input,
-        Traits\Header,
+    use Traits\Header,
         Traits\Output,
         Traits\CheckRequest,
         Traits\CheckResponse;
@@ -54,21 +55,103 @@ abstract class Controller implements ControllerInterface
     }
 
     /**
-     * Run the controller
+     * Called before executing the action.
+     * @codeCoverageIgnore
+     *
+     * <code>
+     * protected function before()
+     * {
+     *    if ($this->auth->getUser()->getCredits() <= 0) {
+     *        return $this->paymentRequired()->output("Sorry, you're out of credits");
+     *    }
+     * }
+     * </code>
+     *
+     * @return void|ResponseInterface|static
      */
-    abstract protected function run(): void;
+    protected function before()
+    {
+    }
 
+    /**
+     * Called after executing the action.
+     * @codeCoverageIgnore
+     *
+     * @return void|ResponseInterface|static
+     */
+    protected function after()
+    {
+    }
+
+    /**
+     * Get the method name of the action
+     */
+    protected function getActionMethod(string $action): string
+    {
+        $sentence = preg_replace('/[\W_]+/', ' ', $action);
+        return lcfirst(str_replace(' ', '', ucwords($sentence)));
+    }
+
+    /**
+     * Get the arguments for a function from a route using reflection.
+     */
+    protected function getFunctionArgs(\ReflectionFunctionAbstract $refl): array
+    {
+        $args = [];
+
+        foreach ($refl->getParameters() as $param) {
+            $attribute = $param->getAttributes(Parameter::class)[0] ?? null;
+
+            if (!isset($attribute)) {
+                if (is_a($param->getType()->getName(), ServerRequestInterface::class, true)) {
+                    $args[] = $this->request;
+                    continue;
+                }
+
+                if (is_a($param->getType()->getName(), ResponseInterface::class, true)) {
+                    $args[] = $this->getResponse();
+                    continue;
+                }
+
+                $attribute = new Path($param->getName());
+            }
+
+            $args[] = $attribute->getValue(
+                $this->request,
+                $param->getName(),
+                $param->getType()->getName(),
+                !$param->isOptional(),
+            ) ?? $param->getDefaultValue();
+        }
+
+        return $args;
+    }
 
     /**
      * Invoke the controller.
      */
-    protected function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $this->request = $request;
         $this->response = $response;
 
-        $this->run();
-        
-        return $this->getResponse();
+        $method = $this->getActionMethod($request->getAttribute('route:action', 'run'));
+        $args = $args ?? $this->getFunctionArgs(new \ReflectionMethod($this, $method));
+
+        if (!method_exists($this, $method)) {
+            return $this->notFound()->getResponse();
+        }
+
+        $before = $this->before();
+
+        if ($before !== null) {
+            return $before instanceof ResponseInterface ? $before : $this->getResponse();
+        }
+
+        $result = [$this, $method](...$args);
+
+        $response = $this->after() ?? $result;
+
+        return $response instanceof ResponseInterface ? $response : $this->getResponse();
     }
 }

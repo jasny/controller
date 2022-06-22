@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Traits\View;
+namespace Jasny\Controller\Traits\View;
 
-use Jasny\Traits\View;
-use Jasny\View\PHP as PHPView;
-use Jasny\Traits\TestHelper;
+use Jasny\Controller\Traits\View;
+use Jasny\Controller\View\PHP as PHPView;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\View\PHP

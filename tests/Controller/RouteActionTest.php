@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
-use Jasny\Traits\RouteActionController;
+use Jasny\Controller\Traits\RouteActionController;
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Traits\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\RouteAction

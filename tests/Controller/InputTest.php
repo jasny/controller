@@ -1,13 +1,13 @@
 <?php
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Jasny\Traits\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\Input
+ * @covers Jasny\Controller\Path
  */
 class InputTest extends \PHPUnit_Framework_TestCase
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace Jasny\Traits;
+namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Traits\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\CheckRequest
