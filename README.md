@@ -4,7 +4,6 @@ Jasny Controller
 [![Build Status](https://travis-ci.org/jasny/controller.svg?branch=master)](https://travis-ci.org/jasny/controller)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/controller/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/jasny/controller/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a7a21bb-c5be-4abf-968e-4503b6f627df/mini.png)](https://insight.sensiolabs.com/projects/4a7a21bb-c5be-4abf-968e-4503b6f627df)
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 

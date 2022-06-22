@@ -2,6 +2,7 @@
 
 namespace Jasny\Controller\Parameter;
 
+use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
@@ -21,7 +22,7 @@ class BodyParam implements Parameter
         $params = $request->getParsedBody();
 
         if ($required && !isset($params[$this->key])) {
-            throw new InputException("Missing required body parameter '{$this->key}'");
+            throw new ParameterException("Missing required body parameter '{$this->key}'");
         }
 
         return $this->filter($params[$this->key] ?? null, $type);

@@ -100,21 +100,7 @@ abstract class Controller
         $args = [];
 
         foreach ($refl->getParameters() as $param) {
-            $attribute = $param->getAttributes(Parameter::class)[0] ?? null;
-
-            if (!isset($attribute)) {
-                if (is_a($param->getType()->getName(), ServerRequestInterface::class, true)) {
-                    $args[] = $this->request;
-                    continue;
-                }
-
-                if (is_a($param->getType()->getName(), ResponseInterface::class, true)) {
-                    $args[] = $this->getResponse();
-                    continue;
-                }
-
-                $attribute = new Path($param->getName());
-            }
+            $attribute = $param->getAttributes(Parameter::class)[0] ?? new Path();
 
             $args[] = $attribute->getValue(
                 $this->request,
