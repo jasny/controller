@@ -10,10 +10,16 @@ use Psr\Http\Message\ResponseInterface;
  */
 trait CheckResponse
 {
-    /**
-     * Get response, set for controller
-     */
     abstract protected function getResponse(): ResponseInterface;
+
+
+    /**
+     * Get the value of the response header, or an empty string if not set.
+     */
+    protected function getResponseHeader(string $name): string
+    {
+        return $this->getResponse()->getHeaderLine($name);
+    }
 
     
     /**

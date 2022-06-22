@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Jasny\Traits;
 
-use Negotiation\AbstractNegotiator;
+use Negotiation\{AbstractNegotiator, Negotiator, LanguageNegotiator, EncodingNegotiator, CharsetNegotiator};
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -11,37 +11,36 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 trait ContentNegotiation
 {
-    /**
-     * Get request, set for controller
-     */
     abstract protected function getRequest(): ServerRequestInterface;
+
+    abstract protected function header(string $header, string|int|\Stringable $value, bool $overwrite = true): static;
 
     /**
      * Pick best content type
      *
-     * @param array $priorities
+     * @param string[] $priorities
      * @return string
      */
-    protected function negotiateContentType(array $priorities)
+    protected function negotiateContentType(array $priorities): string
     {
-        return $this->negotiate($priorities);
+        return $this->negotiate(new Negotiator(), 'Accept', $priorities);
     }
 
     /**
      * Pick best language
      *
-     * @param array $priorities
+     * @param string[] $priorities
      * @return string
      */
     protected function negotiateLanguage(array $priorities)
     {
-        return $this->negotiate($priorities, 'language');
+        return $this->negotiate(new $priorities, 'language');
     }
 
     /**
      * Pick best encoding
      *
-     * @param array $priorities
+     * @param string[] $priorities
      * @return string
      */
     protected function negotiateEncoding(array $priorities)
@@ -52,7 +51,7 @@ trait ContentNegotiation
     /**
      * Pick best charset
      *
-     * @param array $priorities
+     * @param string[] $priorities
      * @return string
      */
     protected function negotiateCharset(array $priorities)
@@ -61,36 +60,13 @@ trait ContentNegotiation
     }
 
     /**
-     * Generalize negotiation
-     *
-     * @param array $priorities
-     * @param string $type       Negotiator type
-     * @return string
+     * Generalize negotiation.
      */
-    protected function negotiate(array $priorities, $type = '')
+    private function negotiate(AbstractNegotiator $negotiator, string $header, array $priorities)
     {
-        $header = 'Accept';
-
-        if ($type) {
-            $header .= '-' . ucfirst($type);
-        }
-
-        $header = $this->getRequest()->getHeader($header);
-        $header = join(', ', $header);
-
-        $negotiator = $this->getNegotiator($type);
-        $chosen = $negotiator->getBest($header, $priorities);
+        $value = join(', ', $this->getRequest()->getHeader($header));
+        $chosen = $negotiator->getBest($value, $priorities);
 
         return $chosen ? $chosen->getType() : '';
-    }
-
-    /**
-     * Get negotiation library instance
-     */
-    protected function getNegotiator(string $type = ''): AbstractNegotiator
-    {
-        $class = 'Negotiation\\' . ucfirst($type) . 'Negotiator';
-
-        return new $class();
     }
 }

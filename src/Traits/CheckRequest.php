@@ -10,9 +10,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 trait CheckRequest
 {
-    /**
-     * Get request, set for controller
-     */
     abstract protected function getRequest(): ServerRequestInterface;
     
     

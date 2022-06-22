@@ -41,73 +41,35 @@ trait Output
         return $mime;
     }
 
-
     /**
-     * Serialize data.
-     */
-    protected function serializeData(mixed $data, string $contentType): string
-    {
-        if (is_string($data)) {
-            return $data;
-        }
-        
-        $repository = new ApacheMimeTypes();
-        $format = $repository->findExtensions($contentType)[0] ?? null;
-        $method = $format !== null ? 'serializeDataTo' . $format : null;
-        
-        if ($method !== null && method_exists($this, $method)) {
-            return $this->$method($data);
-        }
-
-        $type = (is_object($data) ? get_class($data) . ' ' : '') . gettype($data);
-        throw new \UnexpectedValueException("Unable to serialize $type to '$contentType'");
-    }
-    
-    /**
-     * Serialize data to JSON.
-     */
-    protected function serializeDataToJson(mixed $data): string
-    {
-        return json_encode($data);
-    }
-    
-    /**
-     * Serialize data to XML.
+     * Output data as json.
      *
      * @param mixed $data
-     * @return string
-     * @noinspection PhpComposerExtensionStubsInspection
+     * @param int   $flags   Flags for json_encode
+     * @return $this
      */
-    protected function serializeDataToXml(mixed $data): string
+    protected function json(mixed $data, int $flags = 0): static
     {
-        if ($data instanceof \SimpleXMLElement) {
-            return $data->asXML();
-        }
-        
-        if (($data instanceof \DOMNode && isset($data->ownerDocument)) || $data instanceof \DOMDocument) {
-            $dom = $data instanceof \DOMDocument ? $data : $data->ownerDocument;
-            return $dom->saveXML($data);
-        }
-        
-        $type = (is_object($data) ? get_class($data) . ' ' : '') . gettype($data);
-        throw new \UnexpectedValueException("Unable to serialize $type to XML");
+        return $this->output(json_encode($data, $flags), 'application/json');
     }
 
     /**
      * Output result
      *
-     * @param mixed  $data
-     * @param string $format  Output format as MIME or extension
+     * @param string      $content
+     * @param string|null $format  Output format as MIME or extension
      * @return $this
      */
-    protected function output(mixed $data, string $format = 'text/html'): static
+    protected function output(string $content, ?string $format = null): static
     {
-        $contentType = $this->getMime($format);
-        $content = $this->serializeData($data, $contentType);
+        $response = $this->getResponse();
 
-        $response = $this->getResponse()->withHeader('Content-Type', $contentType);
+        if ($format !== null) {
+            $contentType = $this->getMime($format);
+            $response = $response->withHeader('Content-Type', $contentType);
+        }
+
         $response->getBody()->write($content);
-
         $this->setResponse($response);
 
         return $this;

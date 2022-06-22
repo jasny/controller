@@ -10,28 +10,12 @@ use Psr\Http\Message\ResponseInterface;
  */
 trait Header
 {
-    /**
-     * Get response, set for controller
-     */
     abstract protected function getResponse(): ResponseInterface;
 
-    /**
-     * Set response.
-     */
     abstract protected function setResponse(ResponseInterface $response): void;
 
-    /**
-     * Returns the HTTP referer if it is on the current host.
-     */
     abstract protected function getLocalReferer(): string;
 
-    /**
-     * Output result
-     *
-     * @param mixed  $data
-     * @param string $format  Output format as MIME or extension
-     * @return $this
-     */
     abstract protected function output(mixed $data, string $format = 'text/html'): static;
 
 
