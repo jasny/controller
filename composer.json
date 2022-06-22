@@ -17,8 +17,8 @@
     "require": {
         "php": ">=8.0.0",
         "psr/http-message": "^1.0",
-        "dflydev/apache-mime-types": "^1.0",
-        "willdurand/negotiation": "^2.2"
+        "willdurand/negotiation": "^2.2",
+        "ralouphie/mimey": "^1.0"
     },
     "require-dev": {
         "jasny/php-code-quality": "^2.7"

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ResponseInterface;
-use Dflydev\ApacheMimeTypes\PhpRepository as ApacheMimeTypes;
+use Mimey\MimeTypes;
 
 /**
  * Methods for a controller to send a response
@@ -31,8 +31,7 @@ trait Output
             return $format;
         }
         
-        $repository = new ApacheMimeTypes();
-        $mime = $repository->findType($format);
+        $mime = (new MimeTypes())->getMimeType($format);
 
         if (!isset($mime)) {
             throw new \UnexpectedValueException("Format '$format' doesn't correspond with a MIME type");
