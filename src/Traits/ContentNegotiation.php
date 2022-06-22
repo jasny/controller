@@ -32,9 +32,9 @@ trait ContentNegotiation
      * @param string[] $priorities
      * @return string
      */
-    protected function negotiateLanguage(array $priorities)
+    protected function negotiateLanguage(array $priorities): string
     {
-        return $this->negotiate(new $priorities, 'language');
+        return $this->negotiate(new LanguageNegotiator(), 'Accept-Language', $priorities);
     }
 
     /**
@@ -43,9 +43,9 @@ trait ContentNegotiation
      * @param string[] $priorities
      * @return string
      */
-    protected function negotiateEncoding(array $priorities)
+    protected function negotiateEncoding(array $priorities): string
     {
-        return $this->negotiate($priorities, 'encoding');
+        return $this->negotiate(new EncodingNegotiator(), 'Accept-Encoding', $priorities);
     }
 
     /**
@@ -54,17 +54,17 @@ trait ContentNegotiation
      * @param string[] $priorities
      * @return string
      */
-    protected function negotiateCharset(array $priorities)
+    protected function negotiateCharset(array $priorities): string
     {
-        return $this->negotiate($priorities, 'charset');
+        return $this->negotiate(new CharsetNegotiator(), 'Accept-Charset', $priorities);
     }
 
     /**
      * Generalize negotiation.
      */
-    private function negotiate(AbstractNegotiator $negotiator, string $header, array $priorities)
+    private function negotiate(AbstractNegotiator $negotiator, string $header, array $priorities): string
     {
-        $value = join(', ', $this->getRequest()->getHeader($header));
+        $value = $this->getRequest()->getHeaderLine($header);
         $chosen = $negotiator->getBest($value, $priorities);
 
         return $chosen ? $chosen->getType() : '';
