@@ -122,11 +122,13 @@ abstract class Controller
         $this->response = $response;
 
         $method = $this->getActionMethod($request->getAttribute('route:action', 'run'));
-        $args = $args ?? $this->getFunctionArgs(new \ReflectionMethod($this, $method));
+        $refl = method_exists($this, $method) ? new \ReflectionMethod($this, $method) : null;
 
-        if (!method_exists($this, $method)) {
+        if ($refl === null || !$refl->isPublic() || $refl->isConstructor() || $method === __METHOD__) {
             return $this->notFound()->getResponse();
         }
+
+        $args = $this->getFunctionArgs($refl);
 
         $before = $this->before();
 
