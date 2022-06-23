@@ -7,7 +7,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use Jasny\Controller\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\Path
+ * @covers Jasny\Controller\PathParam
  */
 class InputTest extends \PHPUnit_Framework_TestCase
 {

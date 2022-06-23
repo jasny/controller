@@ -16,7 +16,7 @@ trait Header
 
     abstract protected function getLocalReferer(): string;
 
-    abstract protected function output(mixed $data, string $format = 'text/html'): static;
+    abstract protected function output(string $content, ?string $format = null): static;
 
 
     /**

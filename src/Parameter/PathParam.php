@@ -6,7 +6,7 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class Path implements Parameter
+class PathParam implements Parameter
 {
     use SingleParameter;
 

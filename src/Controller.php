@@ -4,7 +4,8 @@ declare(strict_types=1);
 namespace Jasny\Controller;
 
 use Jasny\Controller\Parameter\Parameter;
-use Jasny\Controller\Parameter\Path;
+use Jasny\Controller\Parameter\PathParam;
+use Jasny\Controller\Parameter\QueryParam;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -100,7 +101,10 @@ abstract class Controller
         $args = [];
 
         foreach ($refl->getParameters() as $param) {
-            $attribute = $param->getAttributes(Parameter::class)[0] ?? new Path();
+            $attribute = $param->getAttributes(
+                Parameter::class,
+                \ReflectionAttribute::IS_INSTANCEOF
+            )[0]?->newInstance() ?? new PathParam();
 
             $args[] = $attribute->getValue(
                 $this->request,
@@ -121,14 +125,18 @@ abstract class Controller
         $this->request = $request;
         $this->response = $response;
 
-        $method = $this->getActionMethod($request->getAttribute('route:action', 'run'));
+        $method = $this->getActionMethod($request->getAttribute('route:action', 'process'));
         $refl = method_exists($this, $method) ? new \ReflectionMethod($this, $method) : null;
 
         if ($refl === null || !$refl->isPublic() || $refl->isConstructor() || $method === __METHOD__) {
-            return $this->notFound()->getResponse();
+            return $this->notFound()->output('Not found')->getResponse();
         }
 
-        $args = $this->getFunctionArgs($refl);
+        try {
+            $args = $this->getFunctionArgs($refl);
+        } catch (ParameterException $exception) {
+            return $this->badRequest()->output($exception->getMessage())->getResponse();
+        }
 
         $before = $this->before();
 

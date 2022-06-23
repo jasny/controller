@@ -17,14 +17,15 @@ class BodyParam implements Parameter
      * Optionally apply filtering to the value.
      * @link http://php.net/manual/en/filter.filters.php
      */
-    public function getValue(ServerRequestInterface $request, string $key, string $type, bool $required = false): mixed
+    public function getValue(ServerRequestInterface $request, string $name, string $type, bool $required = false): mixed
     {
+        $key = $this->key ?? $name;
         $params = $request->getParsedBody();
 
-        if ($required && !isset($params[$this->key])) {
-            throw new ParameterException("Missing required body parameter '{$this->key}'");
+        if ($required && !isset($params[$key])) {
+            throw new ParameterException("Missing required body parameter '$key'");
         }
 
-        return $this->filter($params[$this->key] ?? null, $type);
+        return $this->filter($params[$key] ?? null, $type);
     }
 }
