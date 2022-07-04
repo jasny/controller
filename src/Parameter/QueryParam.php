@@ -6,10 +6,8 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class QueryParam implements Parameter
+class QueryParam extends SingleParameter
 {
-    use SingleParameter;
-
     /**
      * Get a query parameter.
      */

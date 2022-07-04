@@ -2,7 +2,7 @@
 
 namespace Jasny\Controller\Traits;
 
-use Jasny\Controller\Traits\RouteActionController;
+use Jasny\Controller\Traits\TestController;
 use Psr\Http\Message\ServerRequestInterface;
 use Jasny\Controller\Traits\TestHelper;
 
@@ -20,7 +20,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
      */
     protected function getControllerClass()
     {
-        return RouteActionController::class;
+        return TestController::class;
     }
     
     /**
@@ -28,7 +28,7 @@ class RouteActionTest extends \PHPUnit_Framework_TestCase
      * 
      * @param array  $methods
      * @param string $className
-     * @return RouteActionController|\PHPUnit_Framework_MockObject_MockObject
+     * @return TestController|\PHPUnit_Framework_MockObject_MockObject
      */
     protected function getController($methods = [], $className = null)
     {

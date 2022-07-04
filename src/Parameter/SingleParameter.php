@@ -2,7 +2,7 @@
 
 namespace Jasny\Controller\Parameter;
 
-trait SingleParameter
+abstract class SingleParameter implements Parameter
 {
     static public array $types = [
         'bool' => [FILTER_VALIDATE_BOOL],

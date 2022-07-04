@@ -6,10 +6,8 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class BodyParam implements Parameter
+class BodyParam extends SingleParameter
 {
-    use SingleParameter;
-
     /**
      * Get request body parameter.
      * If no key is specified return the parsed body and uploaded files or the body as string.

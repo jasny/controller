@@ -5,7 +5,6 @@ namespace Jasny\Controller;
 
 use Jasny\Controller\Parameter\Parameter;
 use Jasny\Controller\Parameter\PathParam;
-use Jasny\Controller\Parameter\QueryParam;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -101,15 +100,16 @@ abstract class Controller
         $args = [];
 
         foreach ($refl->getParameters() as $param) {
-            $attribute = $param->getAttributes(
+            [$argRefl] = $param->getAttributes(
                 Parameter::class,
                 \ReflectionAttribute::IS_INSTANCEOF
-            )[0]?->newInstance() ?? new PathParam();
+            ) + [null];
+            $attribute = $argRefl?->newInstance() ?? new PathParam();
 
             $args[] = $attribute->getValue(
                 $this->request,
                 $param->getName(),
-                $param->getType()->getName(),
+                $param->getType()?->getName(),
                 !$param->isOptional(),
             ) ?? $param->getDefaultValue();
         }

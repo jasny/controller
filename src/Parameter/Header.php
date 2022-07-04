@@ -6,10 +6,8 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class Header implements Parameter
+class Header extends SingleParameter
 {
-    use SingleParameter;
-
     /**
      * Get request header.
      */

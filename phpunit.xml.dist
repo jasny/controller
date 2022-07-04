@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<phpunit
-    colors="true"
-    bootstrap="tests/bootstrap.php"
-    convertErrorsToExceptions="true"
-    convertNoticesToExceptions="true"
-    convertWarningsToExceptions="true"
->
-    <testsuites>
-        <testsuite>
-            <directory>tests/</directory>
-        </testsuite>
-    </testsuites>
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">src</directory>
-        </whitelist>
-    </filter>
-    <logging>
-        <log type="coverage-text" target="php://stdout"/>
-    </logging>    
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" colors="true" bootstrap="vendor/autoload.php" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+    <report>
+      <text outputFile="php://stdout" showUncoveredFiles="true"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="tests">
+      <directory>tests/</directory>
+    </testsuite>
+  </testsuites>
+  <logging/>
+  <php>
+    <ini name="session.use_cookies" value="0"/>
+    <ini name="session.use_only_cookies" value="0"/>
+    <ini name="session.use_trans_sid" value="0"/>
+    <ini name="session.cache_limiter" value=""/>
+  </php>
 </phpunit>
-

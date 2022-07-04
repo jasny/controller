@@ -22,6 +22,7 @@
         "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
+        "roave/security-advisories": "dev-latest",
         "jasny/php-code-quality": "^2.7",
         "slim/slim": "4.*",
         "slim/psr7": "^1.5"
@@ -29,6 +30,11 @@
     "autoload": {
         "psr-4": {
             "Jasny\\Controller\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jasny\\Test\\Controller\\": "tests/"
         }
     }
 }
