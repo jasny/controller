@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Controller;
+namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\Output
@@ -40,7 +40,7 @@ class OutputTest extends \PHPUnit_Framework_TestCase
         $controller->expects($this->once())->method('getResponse')->willReturn($response);
         $controller->expects($this->once())->method('setResponse')->with($finalResponse);
         
-        $controller->setResponseHeader('Foo', 'bar', $replace);
+        $controller->header('Foo', 'bar', $replace);
     }
     
     /**

@@ -1,2 +1,6 @@
 /vendor
 composer.lock
+.idea
+/test.php
+.phpunit.result.cache
+

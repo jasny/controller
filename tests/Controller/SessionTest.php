@@ -1,11 +1,11 @@
 <?php
 
-namespace Jasny\Controller;
+namespace Jasny\Controller\Traits;
 
-use Jasny\Controller\Session;
-use Jasny\Controller\Session\Flash;
+use Jasny\Controller\Traits\Session;
+use Jasny\Controller\Traits\Session\Flash;
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 
 /**
  * @covers Jasny\Controller\Session

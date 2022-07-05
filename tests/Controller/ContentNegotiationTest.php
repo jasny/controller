@@ -1,10 +1,10 @@
 <?php
 
-namespace Jasny\Controller;
+namespace Jasny\Controller\Traits;
 
-use Jasny\Controller\ContentNegotiation;
+use Jasny\Controller\Traits\ContentNegotiation;
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Controller\TestHelper;
+use Jasny\Controller\Traits\TestHelper;
 use Negotiation;
 use Negotiation\BaseAccept;
 

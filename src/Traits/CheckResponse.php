@@ -1,6 +1,7 @@
 <?php
+declare(strict_types=1);
 
-namespace Jasny\Controller;
+namespace Jasny\Controller\Traits;
 
 use Psr\Http\Message\ResponseInterface;
 
@@ -9,20 +10,22 @@ use Psr\Http\Message\ResponseInterface;
  */
 trait CheckResponse
 {
+    abstract protected function getResponse(): ResponseInterface;
+
+
     /**
-     * Get response. set for controller
-     *
-     * @return ResponseInterface
+     * Get the value of the response header, or an empty string if not set.
      */
-    abstract public function getResponse();
+    protected function getResponseHeader(string $name): string
+    {
+        return $this->getResponse()->getHeaderLine($name);
+    }
 
     
     /**
      * Check if response is a 1xx informational
-     * 
-     * @return boolean
      */
-    public function isInformational()
+    protected function isInformational(): bool
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
         return $code >= 100 && $code < 200;
@@ -30,10 +33,8 @@ trait CheckResponse
     
     /**
      * Check if response is 2xx succesful, or empty
-     * 
-     * @return boolean
      */
-    public function isSuccessful()
+    protected function isSuccessful(): bool
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
         return $code >= 200 && $code < 300;
@@ -41,10 +42,8 @@ trait CheckResponse
     
     /**
      * Check if response is a 3xx redirect
-     * 
-     * @return boolean
      */
-    public function isRedirection()
+    protected function isRedirection(): bool
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
         return $code >= 300 && $code < 400;
@@ -52,10 +51,8 @@ trait CheckResponse
     
     /**
      * Check if response is a 4xx client error
-     * 
-     * @return boolean
      */
-    public function isClientError()
+    protected function isClientError(): bool
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
         return $code >= 400 && $code < 500;
@@ -63,10 +60,8 @@ trait CheckResponse
     
     /**
      * Check if response is a 5xx redirect
-     * 
-     * @return boolean
      */
-    public function isServerError()
+    protected function isServerError(): bool
     {
         $code = $this->getResponse()->getStatusCode() ?: 200;
         return $code >= 500 && $code < 600;
@@ -74,10 +69,8 @@ trait CheckResponse
 
     /**
      * Check if response is 4xx or 5xx error
-     *
-     * @return boolean
      */
-    public function isError()
+    protected function isError(): bool
     {
         return $this->isClientError() || $this->isServerError();
     }

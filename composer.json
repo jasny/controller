@@ -15,25 +15,26 @@
         "source": "https://github.com/jasny/controller"
     },
     "require": {
-        "php": ">=5.6.0",
+        "php": ">=8.0.0",
         "psr/http-message": "^1.0",
-        "jasny/php-functions": "^2.0|^3.0|^4.0",
-        "dflydev/apache-mime-types": "^1.0",
-        "willdurand/negotiation": "^2.2"
+        "willdurand/negotiation": "^2.2",
+        "ralouphie/mimey": "^1.0",
+        "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
-        "jasny/php-code-quality": "2.1.*",
-        "jasny/view": "^1.0.0@beta"
-    },
-    "suggest": {
-        "jasny/view": "Use Twig or PHP templates with PSR-7 support",
-        "jasny/http-message": "A PSR-7 implementation for handling HTTP requests",
-        "jasny/router": "A versatile router with PSR-7 support",
-        "jasny/mvc": "Meta package for Jasny Router, Controller and View"
+        "roave/security-advisories": "dev-latest",
+        "jasny/php-code-quality": "^2.7",
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.5"
     },
     "autoload": {
         "psr-4": {
-            "Jasny\\": "src/"
+            "Jasny\\Controller\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jasny\\Test\\Controller\\": "tests/"
         }
     }
 }

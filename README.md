@@ -4,7 +4,6 @@ Jasny Controller
 [![Build Status](https://travis-ci.org/jasny/controller.svg?branch=master)](https://travis-ci.org/jasny/controller)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/controller/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/jasny/controller/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/4a7a21bb-c5be-4abf-968e-4503b6f627df/mini.png)](https://insight.sensiolabs.com/projects/4a7a21bb-c5be-4abf-968e-4503b6f627df)
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 
@@ -38,7 +37,7 @@ What you need to do is implement the `run()` method. It takes no arguments. The 
 with the request and response objects.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
@@ -69,7 +68,7 @@ for the type.
 Instead of using a short type, you can also specify the full mime type as `$this->output($array, 'application/json')`.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     /**
      * Output a random number between 0 and 100 as plain text
@@ -98,7 +97,7 @@ When getting a single query parameter using `getQueryParam()` you can specify a 
 you can specify a [filter](http://php.net/manual/en/filter.filters.php) with filter options.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
@@ -125,7 +124,7 @@ object will try to parse the content body. This typically works for JSON and XML
 will return `null`.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
@@ -141,7 +140,7 @@ To set the response type you can use the `respondWith()` method. This method can
 as string specifying both the status code and phrase.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
@@ -153,7 +152,7 @@ class MyPageController extends Jasny\Controller
 
         // Create something ...
         
-        $this->setResponseHeader("Location: http://www.example.com/foo/something");
+        $this->header("Location: http://www.example.com/foo/something");
         $this->respondWith(201);
         $this->output($something, 'json');
     }
@@ -166,7 +165,7 @@ Alternatively and preferably you can use helper method to set a specific respons
 take arguments that make sence for that status.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
@@ -231,11 +230,11 @@ The following methods for setting the output status are available
 You can set the response header using the `setResponseHeader()` method.
 
 ```php
-class MyPageController extends Jasny\Controller
+class MyPageController extends Jasny\Controller\Controller
 {
     public function run()
     {
-        $this->setResponseHeader("Content-Language", "nl");
+        $this->header("Content-Language", "nl");
         // ...
     }
 }
