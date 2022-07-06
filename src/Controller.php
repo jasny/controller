@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Jasny\Controller;
 
-use Jasny\Controller\Parameter\Parameter;
-use Jasny\Controller\Parameter\PathParam;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -13,47 +11,12 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 abstract class Controller
 {
-    use Traits\Header,
+    use Traits\Base,
+        Traits\Header,
         Traits\Output,
         Traits\CheckRequest,
         Traits\CheckResponse;
     
-    private ServerRequestInterface $request;
-    private ResponseInterface $response;
-
-    
-    /**
-     * Get request, set for controller
-     */
-    protected function getRequest(): ServerRequestInterface
-    {
-        if (!isset($this->request)) {
-            throw new \LogicException("Request not set, the controller has not been invoked"); // @codeCoverageIgnore
-        }
-        
-        return $this->request;
-    }
-
-    /**
-     * Get response, set for controller
-     */
-    protected function getResponse(): ResponseInterface
-    {
-        if (!isset($this->response)) {
-            throw new \LogicException("Response not set, the controller has not been invoked"); // @codeCoverageIgnore
-        }
-        
-        return $this->response;
-    }
-
-    /**
-     * Set the response
-     */
-    protected function setResponse(ResponseInterface $response): void
-    {
-        $this->response = $response;
-    }
-
     /**
      * Called before executing the action.
      * @codeCoverageIgnore
@@ -93,28 +56,23 @@ abstract class Controller
     }
 
     /**
-     * Get the arguments for a function from a route using reflection.
+     * Run a set of guards.
+     * Guards are attributes of the controller or method.
      */
-    protected function getFunctionArgs(\ReflectionFunctionAbstract $refl): array
+    protected function guard(\ReflectionObject|\ReflectionMethod $refl): ?ResponseInterface
     {
-        $args = [];
+        $guards = $refl->getAttributes(Guard::class, \ReflectionAttribute::IS_INSTANCEOF);
 
-        foreach ($refl->getParameters() as $param) {
-            [$argRefl] = $param->getAttributes(
-                Parameter::class,
-                \ReflectionAttribute::IS_INSTANCEOF
-            ) + [null];
-            $attribute = $argRefl?->newInstance() ?? new PathParam();
+        foreach ($guards as $guardRefl) {
+            $guard = $guardRefl->newInstance();
+            $guardResult = $guard($this->getRequest(), $this->getResponse());
 
-            $args[] = $attribute->getValue(
-                $this->request,
-                $param->getName(),
-                $param->getType()?->getName(),
-                !$param->isOptional(),
-            ) ?? $param->getDefaultValue();
+            if ($guardResult !== null) {
+                return $guardResult;
+            }
         }
 
-        return $args;
+        return null;
     }
 
     /**
@@ -138,9 +96,19 @@ abstract class Controller
             return $this->badRequest()->output($exception->getMessage())->getResponse();
         }
 
-        $before = $this->before();
-        if ($before !== null) {
-            return $before instanceof ResponseInterface ? $before : $this->getResponse();
+        $result = $this->guard(new \ReflectionObject($this));
+        if ($result !== null) {
+            return $result;
+        }
+
+        $result = $this->before();
+        if ($result !== null) {
+            return $result instanceof ResponseInterface ? $result : $this->getResponse();
+        }
+
+        $result = $this->guard($refl);
+        if ($result !== null) {
+            return $result;
         }
 
         $result = [$this, $method](...$args);
