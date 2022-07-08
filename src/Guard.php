@@ -15,7 +15,7 @@ abstract class Guard
         Traits\CheckResponse;
 
     /**
-     * @return void|null|ResponseInterface
+     * @return void|null|ResponseInterface|$this
      */
     abstract public function process();
 
@@ -34,6 +34,8 @@ abstract class Guard
         $args = $this->getFunctionArgs(new \ReflectionMethod($this, 'process'));
 
         /** @noinspection PhpMethodParametersCountMismatchInspection */
-        return $this->process(...$args);
+        $result = $this->process(...$args);
+
+        return $result === $this ? $this->getResponse() : $result;
     }
 }
