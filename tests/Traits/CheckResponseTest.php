@@ -1,29 +1,36 @@
 <?php
 
+namespace Jasny\Test\Controller\Traits;
+
+use Jasny\Controller\Controller;
+use PHPStan\Testing\TestCase;
 use Psr\Http\Message\ResponseInterface;
-use Jasny\Controller\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\Traits\CheckResponse
+ * @covers \Jasny\Controller\Traits\CheckResponse
  */
-class ControllerTest extends PHPUnit_Framework_TestCase
+class CheckResponseTest extends TestCase
 {
-    use TestHelper;
-
     /**
-     * Provide data for testing status methods
-     *
-     * @return array
+     * Provide data for testing status methods.
      */
     public function responseStatusProvider()
     {
         return [
             [null, 'successful'],
-            [100, 'informational'], [199, 'informational'],
-            [200, 'successful'], [201, 'successful'], [299, 'successful'],
-            [300, 'redirect'], [304, 'redirect'], [399, 'redirect'],
-            [400, 'client error'], [403, 'client error'], [499, 'client error'],
-            [500, 'server error'], [503, 'server error'],
+            [100, 'informational'],
+            [199, 'informational'],
+            [200, 'successful'],
+            [201, 'successful'],
+            [299, 'successful'],
+            [300, 'redirect'],
+            [304, 'redirect'],
+            [399, 'redirect'],
+            [400, 'client error'],
+            [403, 'client error'],
+            [499, 'client error'],
+            [500, 'server error'],
+            [503, 'server error'],
             [999, 'unkown']
         ];
     }
@@ -31,23 +38,29 @@ class ControllerTest extends PHPUnit_Framework_TestCase
     /**
      * Test functions that check response status code
      * @dataProvider responseStatusProvider
-     * 
-     * @param int    $code status code
-     * @param string $type
      */
-    public function testResponseStatus($code, $type)
+    public function testResponseStatus(?int $code, string $type)
     {
         $response = $this->createMock(ResponseInterface::class);
-        $response->method('getStatusCode')->will($this->returnValue($code));
+        $response->method('getStatusCode')->willReturn($code);
 
-        $controller = $this->getController(['getResponse']);
-        $controller->method('getResponse')->willReturn($response);
+        $controller = new class ($this, $response) extends Controller {
+            public function __construct(public CheckResponseTest $test, protected ResponseInterface $response) {}
 
-        $this->assertSame($type === 'informational', $controller->isInformational(), 'isInformational');
-        $this->assertSame($type === 'successful', $controller->isSuccessful(), 'isSuccessful');
-        $this->assertSame($type === 'redirect', $controller->isRedirection(), 'isRedirection');
-        $this->assertSame($type === 'client error', $controller->isClientError(), 'isClientError');
-        $this->assertSame($type === 'server error', $controller->isServerError(), 'isServerError');
-        $this->assertSame(in_array($type, ['client error', 'server error']), $controller->isError(), 'isError');
+            protected function getResponse(): ResponseInterface {
+                return $this->response;
+            }
+
+            public function assertResponseStatus(string $type) {
+                $this->test->assertSame($type === 'informational', $this->isInformational(), 'isInformational');
+                $this->test->assertSame($type === 'successful', $this->isSuccessful(), 'isSuccessful');
+                $this->test->assertSame($type === 'redirect', $this->isRedirection(), 'isRedirection');
+                $this->test->assertSame($type === 'client error', $this->isClientError(), 'isClientError');
+                $this->test->assertSame($type === 'server error', $this->isServerError(), 'isServerError');
+                $this->test->assertSame(in_array($type, ['client error', 'server error']), $this->isError(), 'isError');
+            }
+        };
+
+        $controller->assertResponseStatus($type);
     }
 }
