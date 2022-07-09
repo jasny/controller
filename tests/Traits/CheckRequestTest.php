@@ -31,14 +31,23 @@ class CheckRequestTest extends TestCase
         $request = $this->createMock(ServerRequestInterface::class);
         $request->method('getMethod')->willReturn($method);
 
-        $controller = $this->createPartialMock(Controller::class, ['getRequest']);
-        $controller->method('getRequest')->willReturn($request);
+        $controller = new class ($this, $request) extends Controller {
+            public function __construct(public CheckRequestTest $test, protected ServerRequestInterface $request) {}
 
-        $this->assertEquals($method === 'GET', $controller->isGetRequest());
-        $this->assertEquals($method === 'POST', $controller->isPostRequest());
-        $this->assertEquals($method === 'PUT', $controller->isPutRequest());
-        $this->assertEquals($method === 'DELETE', $controller->isDeleteRequest());
-        $this->assertEquals($method === 'HEAD', $controller->isHeadRequest());
+            protected function getRequest(): ServerRequestInterface {
+                return $this->request;
+            }
+
+            public function assertRequestMethod(string $method) {
+                $this->test->assertEquals($method === 'GET', $this->isGetRequest());
+                $this->test->assertEquals($method === 'POST', $this->isPostRequest());
+                $this->test->assertEquals($method === 'PUT', $this->isPutRequest());
+                $this->test->assertEquals($method === 'DELETE', $this->isDeleteRequest());
+                $this->test->assertEquals($method === 'HEAD', $this->isHeadRequest());
+            }
+        };
+
+        $controller->assertRequestMethod($method);
     }
 
     /**
@@ -66,14 +75,28 @@ class CheckRequestTest extends TestCase
             [$this->equalTo('HTTP_HOST')]
         )->willReturnOnConsecutiveCalls($referer, $host);
 
+        $controller = new class ($this, $request) extends Controller {
+            public function __construct(public CheckRequestTest $test, protected ServerRequestInterface $request) {}
 
-        $controller = $this->createPartialMock(Controller::class, ['getRequest']);
-        $controller->method('getRequest')->willReturn($request);
+            protected function getRequest(): ServerRequestInterface {
+                return $this->request;
+            }
 
-        $result = $controller->getLocalReferer();
+            public function assertIsLocalReferer(string $referer) {
+                $result = $this->getLocalReferer();
+                $this->test->assertEquals($referer, $result, "Local referer should be returned");
+            }
 
-        $local ?
-            $this->assertEquals($referer, $result, "Local referer should be returned") :
-            $this->assertEquals('', $result, "Local referer should not be returned");
+            public function assertIsNotLocalReferer(string $referer) {
+                $result = $this->getLocalReferer();
+                $this->test->assertEquals('', $result, "Local referer should not be returned");
+            }
+        };
+
+        if ($local) {
+            $controller->assertIsLocalReferer($referer);
+        } else {
+            $controller->assertIsNotLocalReferer($referer);
+        }
     }
 }

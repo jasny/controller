@@ -18,9 +18,7 @@ trait CheckRequest
      */
     protected function isGetRequest(): bool
     {
-        $method = $this->getRequest()->getMethod();
-
-        return !$method || $method === 'GET';
+        return $this->getRequest()->getMethod() === 'GET' || $this->getRequest()->getMethod() === '';
     }
 
     /**
