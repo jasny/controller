@@ -1,170 +1,166 @@
 <?php
 
-namespace Jasny\Controller\Traits;
+namespace Jasny\Test\Controller\Traits;
 
-use Jasny\Controller\Traits\ContentNegotiation;
+use Jasny\Controller\Controller;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Controller\Traits\TestHelper;
-use Negotiation;
-use Negotiation\BaseAccept;
 
 /**
- * @covers Jasny\Controller\ContentNegotiation
+ * @covers \Jasny\Controller\Traits\ContentNegotiation
  */
-class ContentNegotiationTest extends \PHPUnit_Framework_TestCase
+class ContentNegotiationTest extends TestCase
 {
-    use TestHelper;
+    /** @var ServerRequestInterface&MockObject */
+    protected ServerRequestInterface $request;
 
-    /**
-     * Provide data for testing negotiation
-     *
-     * @return array
-     */
-    public function negotiateProvider()
+    /** @var Controller&MockObject */
+    protected Controller $controller;
+
+    public function setUp(): void
+    {
+        $this->request = $this->createMock(ServerRequestInterface::class);
+
+        $this->controller = new class($this, $this->request) extends Controller {
+            public function __construct(public TestCase $test, protected ServerRequestInterface $request) {}
+
+            protected function getRequest(): ServerRequestInterface {
+                return $this->request;
+            }
+
+            public function negotiateContentType(array $priorities): string {
+                return parent::negotiateContentType($priorities);
+            }
+
+            public function negotiateCharset(array $priorities): string {
+                return parent::negotiateCharset($priorities);
+            }
+
+            public function negotiateEncoding(array $priorities): string {
+                return parent::negotiateEncoding($priorities);
+            }
+
+            public function negotiateLanguage(array $priorities): string {
+                return parent::negotiateLanguage($priorities);
+            }
+        };
+    }
+
+    public function contentTypeProvider()
     {
         return [
             [
-                'negotiateContentType',
-                Negotiation\Negotiator::class,
-                '',
                 'text/html',
-                'Accept',
                 ['text/html', 'application/xhtml+xml', 'application/xml;q=0.9', '*/*;q=0.8'],
-                ['text/html', 'application/xhtml+xml', 'application/xml']
+                'text/html, application/xhtml+xml, application/xml'
             ],
             [
-                'negotiateContentType',
-                Negotiation\Negotiator::class,
+                'text/html',
+                ['application/xhtml+xml', 'application/xml;q=0.9', 'text/html;q=0.99', '*/*;q=0.8'],
+                'text/html, application/xml'
+            ],
+            [
                 '',
-                '',
-                'Accept',
                 ['text/html', 'application/xhtml+xml', 'application/xml;q=0.9'],
-                ['text/plain', 'application/json']
+                'text/plain, application/json'
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider contentTypeProvider
+     */
+    public function testNegotiateContentType(string $expected, array $priorities, string $accept)
+    {
+        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept')
+            ->willReturn($accept);
+
+        $result = $this->controller->negotiateContentType($priorities);
+        $this->assertEquals($expected, $result);
+    }
+
+    public function languageProvider()
+    {
+        return [
             [
-                'negotiateLanguage',
-                Negotiation\LanguageNegotiator::class,
-                'language',
                 'en',
-                'Accept-Language',
                 ['en', 'fr; q=0.4', 'fu; q=0.9', 'de; q=0.2'],
-                ['en', 'fr']
+                'en, fr'
             ],
             [
-                'negotiateLanguage',
-                Negotiation\LanguageNegotiator::class,
-                'language',
                 '',
-                'Accept-Language',
                 ['en', 'fr; q=0.4', 'fu; q=0.9', 'de; q=0.2'],
-                ['ru', 'es']
+                'ru, es'
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider languageProvider
+     */
+    public function testNegotiateLanguage(string $expected, array $priorities, string $accept)
+    {
+        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Language')
+            ->willReturn($accept);
+
+        $result = $this->controller->negotiateLanguage($priorities);
+        $this->assertEquals($expected, $result);
+    }
+
+    public function encodingProvider()
+    {
+        return [
             [
-                'negotiateEncoding',
-                Negotiation\EncodingNegotiator::class,
-                'encoding',
                 'gzip',
-                'Accept-Encoding',
                 ['gzip', 'compress', 'deflate'],
-                ['gzip', 'compress']
+                'gzip, compress'
             ],
             [
-                'negotiateEncoding',
-                Negotiation\EncodingNegotiator::class,
-                'encoding',
                 '',
-                'Accept-Encoding',
                 ['gzip', 'compress', 'deflate'],
-                ['br', 'identity']
+                'br, identity'
             ],
+        ];
+    }
+
+    /**
+     * @dataProvider encodingProvider
+     */
+    public function testNegotiateEncoding(string $expected, array $priorities, string $accept)
+    {
+        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Encoding')
+            ->willReturn($accept);
+
+        $result = $this->controller->negotiateEncoding($priorities);
+        $this->assertEquals($expected, $result);
+    }
+
+    public function charsetProvider()
+    {
+        return [
             [
-                'negotiateCharset',
-                Negotiation\CharsetNegotiator::class,
-                'charset',
                 'utf-8',
-                'Accept-Charset',
                 ['utf-8', 'iso-8859-1;q=0.5'],
-                ['utf-8', 'iso-8859-1;q=0.5']
+                'utf-8, iso-8859-1'
             ],
             [
-                'negotiateCharset',
-                Negotiation\CharsetNegotiator::class,
-                'charset',
                 '',
-                'Accept-Charset',
                 ['utf-8', 'iso-8859-1;q=0.5'],
-                ['windows-1251']
+                'windows-1251'
             ]
         ];
     }
 
     /**
-     * Test negotiation
-     * @dataProvider negotiateProvider
-     * 
-     * @param string $method
-     * @param string $negotiatorClass
-     * @param string $type
-     * @param string $expected
-     * @param string $headerName
-     * @param array  $headerValue
-     * @param array  $priorities
+     * @dataProvider charsetProvider
      */
-    public function testNegotiate(
-        $method,
-        $negotiatorClass,
-        $type,
-        $expected,
-        $headerName,
-        array $headerValue,
-        array $priorities
-    ) {
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getHeader')->with($this->equalTo($headerName))
-            ->will($this->returnValue($headerValue));
-
-        $expectedObj = $this->createMock(BaseAccept::class);
-        $expectedObj->expects($this->once())->method('getType')->will($this->returnValue($expected));
-
-        $negotiator = $this->createMock($negotiatorClass);
-        $negotiator->expects($this->once())->method('getBest')
-            ->with($this->equalTo(join(', ', $headerValue)), $this->equalTo($priorities))
-            ->will($this->returnValue($expectedObj));
-
-        $trait = $this->getController(['getRequest', 'getNegotiator']);
-        $trait->expects($this->once())->method('getRequest')->will($this->returnValue($request));
-        $trait->expects($this->once())->method('getNegotiator')->with($this->equalTo($type))
-            ->will($this->returnValue($negotiator));
-
-        $buildClass = $this->callPrivateMethod($trait, 'getNegotiatorName', [$type]);
-        $result = $trait->{$method}($priorities);
-
-        $this->assertEquals($buildClass, $negotiatorClass, "Obtained wrong negotiator class");
-        $this->assertEquals($result, $expected, "Obtained result does not match expected result");
-    }
-
-    /**
-     * Test negotiation
-     * @dataProvider negotiateProvider
-     * 
-     * @param string $method
-     * @param string $negotiatorClass
-     * @param string $type
-     */
-    public function testGetNegotiator($method, $negotiatorClass, $type)
+    public function testNegotiateCharset(string $expected, array $priorities, string $accept)
     {
-        $controller = $this->getController();
-        
-        $this->assertInstanceOf($negotiatorClass, $this->callPrivateMethod($controller, 'getNegotiator', [$type]));
-    }
-    
-    /**
-     * Get the controller class
-     *
-     * @return string
-     */
-    protected function getControllerClass()
-    {
-        return ContentNegotiation::class;
+        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Charset')
+            ->willReturn($accept);
+
+        $result = $this->controller->negotiateCharset($priorities);
+        $this->assertEquals($expected, $result);
     }
 }

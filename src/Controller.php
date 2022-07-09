@@ -16,6 +16,7 @@ abstract class Controller
         Traits\Output,
         Traits\CheckRequest,
         Traits\CheckResponse,
+        Traits\ContentNegotiation,
         Traits\Guarded;
 
     /**

@@ -3,7 +3,7 @@
 namespace Jasny\Test\Controller\Traits;
 
 use Jasny\Controller\Controller;
-use PHPStan\Testing\TestCase;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -45,7 +45,7 @@ class CheckResponseTest extends TestCase
         $response->method('getStatusCode')->willReturn($code);
 
         $controller = new class ($this, $response) extends Controller {
-            public function __construct(public CheckResponseTest $test, protected ResponseInterface $response) {}
+            public function __construct(public TestCase $test, protected ResponseInterface $response) {}
 
             protected function getResponse(): ResponseInterface {
                 return $this->response;
