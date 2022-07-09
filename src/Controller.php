@@ -15,8 +15,9 @@ abstract class Controller
         Traits\Header,
         Traits\Output,
         Traits\CheckRequest,
-        Traits\CheckResponse;
-    
+        Traits\CheckResponse,
+        Traits\Guarded;
+
     /**
      * Called before executing the action.
      * @codeCoverageIgnore
@@ -53,26 +54,6 @@ abstract class Controller
     {
         $sentence = preg_replace('/[\W_]+/', ' ', $action);
         return lcfirst(str_replace(' ', '', ucwords($sentence)));
-    }
-
-    /**
-     * Run a set of guards.
-     * Guards are attributes of the controller or method.
-     */
-    protected function guard(\ReflectionObject|\ReflectionMethod $refl): ?ResponseInterface
-    {
-        $guards = $refl->getAttributes(Guard::class, \ReflectionAttribute::IS_INSTANCEOF);
-
-        foreach ($guards as $guardRefl) {
-            $guard = $guardRefl->newInstance();
-            $guardResult = $guard($this->getRequest(), $this->getResponse());
-
-            if ($guardResult !== null) {
-                return $guardResult;
-            }
-        }
-
-        return null;
     }
 
     /**

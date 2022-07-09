@@ -13,8 +13,8 @@ use Psr\Http\Message\StreamInterface;
 
 /**
  * @covers \Jasny\Controller\Controller
- * @covers \Jasny\Controller\Traits\Base
  * @covers \Jasny\Controller\Guard
+ * @covers \Jasny\Controller\Guardian
  */
 class ControllerTest extends TestCase
 {

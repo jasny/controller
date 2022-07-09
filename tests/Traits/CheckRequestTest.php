@@ -1,23 +1,20 @@
 <?php
 
-namespace Jasny\Controller\Traits;
+namespace Jasny\Test\Controller\Traits;
 
+use Jasny\Controller\Controller;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Jasny\Controller\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\CheckRequest
+ * @covers \Jasny\Controller\Traits\CheckRequest
  */
-class CheckRequestTest extends \PHPUnit_Framework_TestCase
+class CheckRequestTest extends TestCase
 {
-    use TestHelper;
-
     /**
      * Provide data for testing functions that determine request method
-     *
-     * @return array
      */
-    public function requestMethodProvider()
+    public function requestMethodProvider(): array
     {
         return [
             ['GET'], ['POST'], ['PUT'], ['DELETE'], ['HEAD']
@@ -28,15 +25,14 @@ class CheckRequestTest extends \PHPUnit_Framework_TestCase
      * Test functions that check request method
      *
      * @dataProvider requestMethodProvider
-     * @param string $method
      */
-    public function testRequestMethod($method)
+    public function testRequestMethod(string $method)
     {
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getMethod')->will($this->returnValue($method));
+        $request->method('getMethod')->willReturn($method);
 
-        $controller = $this->getController(['getRequest']);
-        $controller->method('getRequest')->will($this->returnValue($request));
+        $controller = $this->createPartialMock(Controller::class, ['getRequest']);
+        $controller->method('getRequest')->willReturn($request);
 
         $this->assertEquals($method === 'GET', $controller->isGetRequest());
         $this->assertEquals($method === 'POST', $controller->isPostRequest());
@@ -46,16 +42,14 @@ class CheckRequestTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Provide data fot testing 'getLocalReferer' function
-     *
-     * @return array
+     * Provide data fot testing 'getLocalReferer' function.
      */
-    public function localRefererProvider()
+    public function localRefererProvider(): array
     {
         return [
-            ['http://google.com/path', 'example.com', null],
-            ['http://example.com/', 'example.com', '/'],
-            ['http://www.example.com/path', 'example.com', null],
+            ['http://google.com/path', 'example.com', false],
+            ['http://example.com/', 'example.com', true],
+            ['http://www.example.com/path', 'example.com', false],
         ];
     }
 
@@ -63,11 +57,8 @@ class CheckRequestTest extends \PHPUnit_Framework_TestCase
      * Test 'getLocalReferer' funtion
      *
      * @dataProvider localRefererProvider
-     * @param string $referer
-     * @param string $host
-     * @param boolean $local
      */
-    public function testLocalReferer($referer, $host, $local)
+    public function testLocalReferer(string $referer, string $host, bool $local): void
     {
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->exactly(2))->method('getHeaderLine')->withConsecutive(
@@ -75,8 +66,9 @@ class CheckRequestTest extends \PHPUnit_Framework_TestCase
             [$this->equalTo('HTTP_HOST')]
         )->willReturnOnConsecutiveCalls($referer, $host);
 
-        $controller = $this->getController(['getRequest']);
-        $controller->method('getRequest')->will($this->returnValue($request));
+
+        $controller = $this->createPartialMock(Controller::class, ['getRequest']);
+        $controller->method('getRequest')->willReturn($request);
 
         $result = $controller->getLocalReferer();
 
