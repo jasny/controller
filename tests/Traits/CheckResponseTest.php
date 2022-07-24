@@ -11,6 +11,26 @@ use Psr\Http\Message\ResponseInterface;
  */
 class CheckResponseTest extends TestCase
 {
+    public function testGetResponseHeader()
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->once())->method('getHeaderLine')->with('foo')->willReturn('bar');
+
+        $controller = new class ($this, $response) extends Controller {
+            public function __construct(public TestCase $test, protected ResponseInterface $response) {}
+
+            protected function getResponse(): ResponseInterface {
+                return $this->response;
+            }
+
+            public function testGetResponseHeader(string $name) {
+                return $this->getResponseHeader($name);
+            }
+        };
+
+        $this->assertEquals('bar', $controller->testGetResponseHeader('foo'));
+    }
+
     /**
      * Provide data for testing status methods.
      */

@@ -1,19 +1,17 @@
 <?php
 
-namespace Jasny\Controller\Traits;
+namespace Jasny\Test\Controller\Traits;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Jasny\Controller\Traits\TestHelper;
 
 /**
- * @covers Jasny\Controller\Output
+ * @covers \Jasny\Controller\Traits\Output
  */
-class OutputTest extends \PHPUnit_Framework_TestCase
+class OutputTest extends TestCase
 {
-    use TestHelper;
 
-    
     public function getSetResponseHeaderProvider()
     {
         return [
