@@ -3,6 +3,7 @@
 namespace Jasny\Test\Controller\Traits;
 
 use Jasny\Controller\Controller;
+use Jasny\Test\Controller\InContextOf;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -11,6 +12,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class CheckRequestTest extends TestCase
 {
+    use InContextOf;
+
     /**
      * Provide data for testing functions that determine request method
      */
@@ -71,32 +74,16 @@ class CheckRequestTest extends TestCase
     {
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->exactly(2))->method('getHeaderLine')->withConsecutive(
-            [$this->equalTo('HTTP_REFERER')],
-            [$this->equalTo('HTTP_HOST')]
+            [$this->equalTo('Referer')],
+            [$this->equalTo('Host')]
         )->willReturnOnConsecutiveCalls($referer, $host);
 
-        $controller = new class ($this, $request) extends Controller {
-            public function __construct(public CheckRequestTest $test, protected ServerRequestInterface $request) {}
+        $controller = $this->createPartialMock(Controller::class, ['getRequest']);
+        $controller->method('getRequest')->willReturn($request);
 
-            protected function getRequest(): ServerRequestInterface {
-                return $this->request;
-            }
-
-            public function assertIsLocalReferer(string $referer) {
-                $result = $this->getLocalReferer();
-                $this->test->assertEquals($referer, $result, "Local referer should be returned");
-            }
-
-            public function assertIsNotLocalReferer(string $referer) {
-                $result = $this->getLocalReferer();
-                $this->test->assertEquals('', $result, "Local referer should not be returned");
-            }
-        };
-
-        if ($local) {
-            $controller->assertIsLocalReferer($referer);
-        } else {
-            $controller->assertIsNotLocalReferer($referer);
-        }
+        $this->assertEquals(
+            $local ? $referer : null,
+            $this->inContextOf($controller, fn() => $controller->getLocalReferer())
+        );
     }
 }

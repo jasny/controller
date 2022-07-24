@@ -57,12 +57,12 @@ trait CheckRequest
     /**
      * Returns the HTTP referer if it is on the current host
      */
-    protected function getLocalReferer(): string
+    protected function getLocalReferer(): ?string
     {
         $request = $this->getRequest();
-        $referer = $request->getHeaderLine('HTTP_REFERER');
-        $host = $request->getHeaderLine('HTTP_HOST');
+        $referer = $request->getHeaderLine('Referer');
+        $host = $request->getHeaderLine('Host');
 
-        return $referer && parse_url($referer, PHP_URL_HOST) === $host ? $referer : '';
+        return $referer && parse_url($referer, PHP_URL_HOST) === $host ? $referer : null;
     }
 }

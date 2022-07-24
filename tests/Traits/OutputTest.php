@@ -2,6 +2,8 @@
 
 namespace Jasny\Test\Controller\Traits;
 
+use Jasny\Controller\Controller;
+use Jasny\Test\Controller\InContextOf;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -11,12 +13,13 @@ use Psr\Http\Message\StreamInterface;
  */
 class OutputTest extends TestCase
 {
+    use InContextOf;
 
     public function getSetResponseHeaderProvider()
     {
         return [
-            [true, 'withHeader'],
-            [false, 'withAddedHeader']
+            'set header' => [true, 'withHeader'],
+            'add header' => [false, 'withAddedHeader']
         ];
     }
     
@@ -30,83 +33,15 @@ class OutputTest extends TestCase
     {
         $response = $this->createMock(ResponseInterface::class);
         $finalResponse = $this->createMock(ResponseInterface::class);
-        
         $response->expects($this->once())->method($method)->with('Foo', 'bar')->willReturn($finalResponse);
         
-        $controller = $this->getController(['getResponse', 'setResponse']);
-        
-        $controller->expects($this->once())->method('getResponse')->willReturn($response);
-        $controller->expects($this->once())->method('setResponse')->with($finalResponse);
-        
-        $controller->header('Foo', 'bar', $replace);
-    }
-    
-    /**
-     * Test function respondWith
-     *
-     * @return array
-     */
-    public function respondWithProvider()
-    {
-        return [
-            [[200, 'application/json'], 200, 'application/json'],
-            [[200, 'json'], 200, 'application/json'],
-            [[204], 204, null],
-            [[204, null], 204, null],
-            [['400 Foo Bar'], [400, 'Foo Bar'], null],
-            [[null, 'application/json'], null, 'application/json'],
-            [['application/json'], null, 'application/json'],
-            [['json'], null, 'application/json'],
-            [['html'], null, 'text/html'],
-            [['text'], null, 'text/plain']
-        ];
-    }
-
-    /**
-     * Test respondWith function
-     * @dataProvider respondWithProvider
-     *
-     * @param array     $args
-     * @param int|array $status       Expected status code or [code, phrase]
-     * @param string    $contentType
-     */
-    public function testRespondWith($args, $status, $contentType)
-    {
-        $response = $this->createMock(ResponseInterface::class);
-        $statusResponse = isset($status) ? $this->createMock(ResponseInterface::class) : $response;
-        $finalResponse = isset($contentType) ? $this->createMock(ResponseInterface::class) : $statusResponse;
-
-        $response->expects(isset($status) ? $this->once() : $this->never())->method('withStatus')
-            ->with(...(array)$status)
-            ->willReturn($statusResponse);
-
-        $statusResponse->expects(isset($contentType) ? $this->once() : $this->never())->method('withHeader')
-            ->with('Content-Type', $contentType)
-            ->willReturn($finalResponse);
-
-        $controller = $this->getController(['getResponse', 'setResponse']);
+        $controller = $this->createPartialMock(Controller::class, ['getResponse', 'setResponse']);
 
         $controller->expects($this->once())->method('getResponse')->willReturn($response);
         $controller->expects($this->once())->method('setResponse')->with($finalResponse);
 
-        $controller->respondWith(...$args);
+        $this->inContextOf($controller, fn() => $controller->header('Foo', 'bar', $replace));
     }
-
-    /**
-     * @expectedException \UnexpectedValueException
-     * @expectedExceptionMessage Format 'foo-bar-zoo' doesn't correspond with a MIME type
-     */
-    public function testRespondWithFormat()
-    {
-        $response = $this->createMock(ResponseInterface::class);
-
-        $controller = $this->getController(['getResponse', 'setResponse']);
-        $controller->expects($this->once())->method('getResponse')->willReturn($response);
-        $controller->expects($this->never())->method('setResponse');
-
-        $controller->respondWith(null, 'foo-bar-zoo');
-    }
-
 
     public function implicitStatusCodeProvider()
     {
@@ -137,19 +72,16 @@ class OutputTest extends TestCase
     /**
      * Test the default status code of different response methods
      * @dataProvider implicitStatusCodeProvider
-     *
-     * @param string $function
-     * @param int    $code      Expected status code
-     * @param array  $args
      */
-    public function testImplicitStatus($function, $code, $args = [])
+    public function testImplicitStatus(string $function, int $code, array $args = [])
     {
         $response = $this->createMock(ResponseInterface::class);
         $response->expects($this->once())->method('withStatus')->with($code)->willReturnSelf();
         $response->expects($this->any())->method('withHeader')->willReturnSelf();
 
-        $controller = $this->getController(['getResponse', 'output', 'getLocalReferer']);
+        $controller = $this->createPartialMock(['getResponse']);
         $controller->method('getResponse')->willReturn($response);
+
 
         $controller->$function(...$args);
     }

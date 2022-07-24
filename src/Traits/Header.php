@@ -14,7 +14,7 @@ trait Header
 
     abstract protected function setResponse(ResponseInterface $response): void;
 
-    abstract protected function getLocalReferer(): string;
+    abstract protected function getLocalReferer(): ?string;
 
     abstract protected function output(string $content, ?string $format = null): static;
 
@@ -41,7 +41,7 @@ trait Header
      * Examples:
      * <code>
      *   $this->status(200);
-     *   $this->status("200 OK");
+     *   $this->status("200 Ok");
      * </code>
      *
      * @param int|string $status
@@ -50,7 +50,7 @@ trait Header
     protected function status(int|string $status): static
     {
         if (is_string($status)) {
-            [$status, $phrase] = explode(' ', $status, 2) + [1 => null];
+            [$status, $phrase] = explode(' ', $status, 2) + [1 => ''];
         } else {
             $phrase = '';
         }
@@ -63,7 +63,7 @@ trait Header
 
 
     /**
-     * Response with 200 OK
+     * Response with 200 Ok
      *
      * @return $this
      */
@@ -131,11 +131,15 @@ trait Header
     /**
      * Redirect to url and output a short message with the link
      *
-     * @param string $url
-     * @param int    $status  301 (Moved Permanently), 302 (Found), 303 (See Other) or 307 (Temporary Redirect)
+     * @param string     $url
+     * @param int|string $status  301 (Moved Permanently), 302 (Found), 303 (See Other) or 307 (Temporary Redirect)
      */
-    protected function redirect(string $url, int $status = 303): static
+    protected function redirect(string $url, int|string $status = 303): static
     {
+        if ($status < 300 || $status >= 400) {
+            throw new \DomainException("Invalid status code $status for redirect");
+        }
+
         $urlHtml = htmlentities($url);
 
         return $this

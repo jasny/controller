@@ -3,6 +3,7 @@
 namespace Jasny\Test\Controller\Traits;
 
 use Jasny\Controller\Controller;
+use Jasny\Test\Controller\InContextOf;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
@@ -11,24 +12,20 @@ use Psr\Http\Message\ResponseInterface;
  */
 class CheckResponseTest extends TestCase
 {
+    use InContextOf;
+
     public function testGetResponseHeader()
     {
         $response = $this->createMock(ResponseInterface::class);
         $response->expects($this->once())->method('getHeaderLine')->with('foo')->willReturn('bar');
 
-        $controller = new class ($this, $response) extends Controller {
-            public function __construct(public TestCase $test, protected ResponseInterface $response) {}
+        $controller = $this->createPartialMock(Controller::class, ['getResponse']);
+        $controller->method('getResponse')->willReturn($response);
 
-            protected function getResponse(): ResponseInterface {
-                return $this->response;
-            }
-
-            public function testGetResponseHeader(string $name) {
-                return $this->getResponseHeader($name);
-            }
-        };
-
-        $this->assertEquals('bar', $controller->testGetResponseHeader('foo'));
+        $this->assertEquals(
+            'bar',
+            $this->inContextOf($controller, fn() => $controller->getResponseHeader('foo'))
+        );
     }
 
     /**
