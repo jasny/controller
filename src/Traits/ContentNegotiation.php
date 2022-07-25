@@ -13,7 +13,7 @@ trait ContentNegotiation
 {
     abstract protected function getRequest(): ServerRequestInterface;
 
-    abstract protected function header(string $header, string|int|\Stringable $value, bool $overwrite = true): static;
+    abstract protected function header(string $header, string|int|\Stringable $value, bool $add = false): static;
 
     /**
      * Pick best content type
@@ -23,33 +23,52 @@ trait ContentNegotiation
      */
     protected function negotiateContentType(array $priorities): string
     {
-        return $this->negotiate(new Negotiator(), 'Accept', $priorities);
+        $contentType = $this->negotiate(new Negotiator(), 'Accept', $priorities);
+
+        if ($contentType !== '') {
+            $this->header('Content-Type', $contentType);
+        }
+
+        return $contentType;
     }
 
     /**
-     * Pick best language
+     * Pick best language and set the `Content-Language` header
      *
      * @param string[] $priorities
      * @return string
      */
     protected function negotiateLanguage(array $priorities): string
     {
-        return $this->negotiate(new LanguageNegotiator(), 'Accept-Language', $priorities);
+        $language = $this->negotiate(new LanguageNegotiator(), 'Accept-Language', $priorities);
+
+        if ($language !== '') {
+            $this->header('Content-Language', $language);
+        }
+
+        return $language;
     }
 
     /**
-     * Pick best encoding
+     * Pick best encoding and set `Content-Encoding` header
      *
      * @param string[] $priorities
      * @return string
      */
     protected function negotiateEncoding(array $priorities): string
     {
-        return $this->negotiate(new EncodingNegotiator(), 'Accept-Encoding', $priorities);
+        $encoding = $this->negotiate(new EncodingNegotiator(), 'Accept-Encoding', $priorities);
+
+        if ($encoding !== '') {
+            $this->header('Content-Encoding', $encoding);
+        }
+
+        return $encoding;
     }
 
     /**
-     * Pick best charset
+     * Pick best charset.
+     * This method only returns the charset and doesn't set any header.
      *
      * @param string[] $priorities
      * @return string

@@ -24,11 +24,11 @@ trait Header
      *
      * @return $this
      */
-    protected function header(string $header, string|int|\Stringable $value, bool $overwrite = true): static
+    protected function header(string $header, string|int|\Stringable $value, bool $add = false): static
     {
-        $fn = $overwrite ? 'withHeader' : 'withAddedHeader';
-
-        $response = $this->getResponse()->$fn($header, (string)$value);
+        $response = $add
+            ? $this->getResponse()->withAddedHeader($header, (string)$value)
+            : $this->getResponse()->withHeader($header, (string)$value);
         $this->setResponse($response);
 
         return $this;

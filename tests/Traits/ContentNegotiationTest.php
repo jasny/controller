@@ -3,7 +3,7 @@
 namespace Jasny\Test\Controller\Traits;
 
 use Jasny\Controller\Controller;
-use PHPUnit\Framework\MockObject\MockObject;
+use Jasny\Test\Controller\InContextOf;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -12,40 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class ContentNegotiationTest extends TestCase
 {
-    /** @var ServerRequestInterface&MockObject */
-    protected ServerRequestInterface $request;
-
-    /** @var Controller&MockObject */
-    protected Controller $controller;
-
-    public function setUp(): void
-    {
-        $this->request = $this->createMock(ServerRequestInterface::class);
-
-        $this->controller = new class($this, $this->request) extends Controller {
-            public function __construct(public TestCase $test, protected ServerRequestInterface $request) {}
-
-            protected function getRequest(): ServerRequestInterface {
-                return $this->request;
-            }
-
-            public function negotiateContentType(array $priorities): string {
-                return parent::negotiateContentType($priorities);
-            }
-
-            public function negotiateCharset(array $priorities): string {
-                return parent::negotiateCharset($priorities);
-            }
-
-            public function negotiateEncoding(array $priorities): string {
-                return parent::negotiateEncoding($priorities);
-            }
-
-            public function negotiateLanguage(array $priorities): string {
-                return parent::negotiateLanguage($priorities);
-            }
-        };
-    }
+    use InContextOf;
 
     public function contentTypeProvider()
     {
@@ -73,10 +40,17 @@ class ContentNegotiationTest extends TestCase
      */
     public function testNegotiateContentType(string $expected, array $priorities, string $accept)
     {
-        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept')
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeaderLine')->with('Accept')
             ->willReturn($accept);
 
-        $result = $this->controller->negotiateContentType($priorities);
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'header']);
+        $controller->method('getRequest')->willReturn($request);
+        $controller->expects($expected !== '' ? $this->once() : $this->never())
+            ->method('header')
+            ->with('Content-Type', $expected);
+
+        $result = $this->inContextOf($controller, fn() => $controller->negotiateContentType($priorities));
         $this->assertEquals($expected, $result);
     }
 
@@ -101,10 +75,17 @@ class ContentNegotiationTest extends TestCase
      */
     public function testNegotiateLanguage(string $expected, array $priorities, string $accept)
     {
-        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Language')
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeaderLine')->with('Accept-Language')
             ->willReturn($accept);
 
-        $result = $this->controller->negotiateLanguage($priorities);
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'header']);
+        $controller->method('getRequest')->willReturn($request);
+        $controller->expects($expected !== '' ? $this->once() : $this->never())
+            ->method('header')
+            ->with('Content-Language', $expected);
+
+        $result = $this->inContextOf($controller, fn() => $controller->negotiateLanguage($priorities));
         $this->assertEquals($expected, $result);
     }
 
@@ -129,10 +110,17 @@ class ContentNegotiationTest extends TestCase
      */
     public function testNegotiateEncoding(string $expected, array $priorities, string $accept)
     {
-        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Encoding')
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeaderLine')->with('Accept-Encoding')
             ->willReturn($accept);
 
-        $result = $this->controller->negotiateEncoding($priorities);
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'header']);
+        $controller->method('getRequest')->willReturn($request);
+        $controller->expects($expected !== '' ? $this->once() : $this->never())
+            ->method('header')
+            ->with('Content-Encoding', $expected);
+
+        $result = $this->inContextOf($controller, fn() => $controller->negotiateEncoding($priorities));
         $this->assertEquals($expected, $result);
     }
 
@@ -157,10 +145,15 @@ class ContentNegotiationTest extends TestCase
      */
     public function testNegotiateCharset(string $expected, array $priorities, string $accept)
     {
-        $this->request->expects($this->once())->method('getHeaderLine')->with('Accept-Charset')
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeaderLine')->with('Accept-Charset')
             ->willReturn($accept);
 
-        $result = $this->controller->negotiateCharset($priorities);
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'header']);
+        $controller->method('getRequest')->willReturn($request);
+        $controller->expects($this->never())->method('header');
+
+        $result = $this->inContextOf($controller, fn() => $controller->negotiateCharset($priorities));
         $this->assertEquals($expected, $result);
     }
 }
