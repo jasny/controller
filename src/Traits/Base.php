@@ -63,11 +63,11 @@ trait Base
             $attribute = $argRefl?->newInstance() ?? new PathParam();
 
             $args[] = $attribute->getValue(
-                    $this->request,
-                    $param->getName(),
-                    $param->getType()?->getName(),
-                    !$param->isOptional(),
-                ) ?? $param->getDefaultValue();
+                $this->request,
+                $param->getName(),
+                $param->getType()?->getName(),
+                !$param->isOptional(),
+            ) ?? $param->getDefaultValue();
         }
 
         return $args;

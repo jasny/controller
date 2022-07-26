@@ -28,13 +28,13 @@ abstract class SingleParameter implements Parameter
     /**
      * Apply sanitize filter to value.
      */
-    protected function filter(mixed $value, string $type): mixed
+    protected function filter(mixed $value, ?string $type): mixed
     {
         if ($value === null) {
             return null;
         }
 
-        [$filter, $options] = (self::$types[$type] ?? []) + [FILTER_DEFAULT, 0];
+        [$filter, $options] = (self::$types[$type ?? ''] ?? []) + [FILTER_DEFAULT, 0];
 
         return filter_var($value, $filter, $options);
     }

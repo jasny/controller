@@ -12,7 +12,7 @@ class Headers implements Parameter
      *
      * @return array<string,string>
      */
-    public function getValue(ServerRequestInterface $request, string $name, string $type, bool $required = false): array
+    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): array
     {
         return array_map(static fn ($h) => implode(',', $h), $request->getHeaders());
     }
