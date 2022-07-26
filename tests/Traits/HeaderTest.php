@@ -55,15 +55,15 @@ class HeaderTest extends TestCase
     public function testAddedHeader()
     {
         $response = $this->createMock(ResponseInterface::class);
-        $response->expects($this->once())->method('withHeader')
+        $response->expects($this->never())->method('withHeader');
+        $response->expects($this->once())->method('withAddedHeader')
             ->with('foo', 'bar')
             ->willReturnSelf();
-        $response->expects($this->never())->method('withAddedHeader');
 
         $controller = $this->createPartialMock(Controller::class, ['getResponse']);
         $controller->method('getResponse')->willReturn($response);
 
-        $this->inContextOf($controller, fn () => $controller->header('foo', 'bar', false));
+        $this->inContextOf($controller, fn () => $controller->header('foo', 'bar', true));
     }
 
     public function implicitStatusCodeProvider()
