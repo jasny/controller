@@ -6,6 +6,9 @@ use Jasny\Controller\Parameter\Headers;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @covers \Jasny\Controller\Parameter\Headers
+ */
 class HeadersTest extends TestCase
 {
     public function test()

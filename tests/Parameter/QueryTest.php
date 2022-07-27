@@ -6,6 +6,9 @@ use Jasny\Controller\Parameter\Query;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @covers \Jasny\Controller\Parameter\Query
+ */
 class QueryTest extends TestCase
 {
     protected Query $parameter;

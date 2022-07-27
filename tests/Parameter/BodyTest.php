@@ -8,6 +8,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 
+/**
+ * @covers \Jasny\Controller\Parameter\Body
+ */
 class BodyTest extends TestCase
 {
     protected Body $parameter;
