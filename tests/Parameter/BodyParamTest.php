@@ -26,13 +26,13 @@ class BodyParamTest extends TestCase
     /**
      * @dataProvider provider
      */
-    public function test($consKey, $consType, $name, $type, $attribute, $expected)
+    public function test($consKey, $consType, $name, $type, $param, $expected)
     {
         $parameter = new BodyParam($consKey, $consType);
 
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->once())->method('getParsedBody')
-            ->willReturn([$attribute => '42', 'ot' => 10]);
+            ->willReturn([$param => '42', 'ot' => 10]);
 
         $value = $parameter->getValue($request, $name, $type);
         $this->assertEquals($expected, $value);

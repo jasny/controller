@@ -2,37 +2,38 @@
 
 namespace Jasny\Test\Controller\Parameter;
 
-use Jasny\Controller\Parameter\QueryParam;
+use Jasny\Controller\Parameter\Header;
 use Jasny\Controller\ParameterException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * @covers \Jasny\Controller\Parameter\QueryParam
+ * @covers \Jasny\Controller\Parameter\Header
  * @covers \Jasny\Controller\Parameter\SingleParameter
  */
-class QueryParamTest extends TestCase
+class HeaderTest extends TestCase
 {
     public function provider()
     {
         return [
-            ['foo', 'int', 'bar', 'string', 'foo', 42],
-            ['foo', null, 'bar', 'string', 'foo', '42'],
-            [null, 'int', 'bar', 'string', 'bar', 42],
-            [null, null, 'bar', 'string', 'bar', '42'],
+            ['Foo', 'int', 'bar', 'string', 'Foo', 42],
+            ['Foo', null, 'bar', 'string', 'Foo', '42'],
+            [null, 'int', 'bar', 'string', 'Bar', 42],
+            [null, null, 'bar', 'string', 'Bar', '42'],
         ];
     }
 
     /**
      * @dataProvider provider
      */
-    public function test($consKey, $consType, $name, $type, $param, $expected)
+    public function test($consKey, $consType, $name, $type, $header, $expected)
     {
-        $parameter = new QueryParam($consKey, $consType);
+        $parameter = new Header($consKey, $consType);
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getQueryParams')
-            ->willReturn([$param => '42', 'ot' => 10]);
+        $request->expects($this->once())->method('getHeaderLine')
+            ->with($header)
+            ->willReturn('42');
 
         $value = $parameter->getValue($request, $name, $type);
         $this->assertEquals($expected, $value);
@@ -40,11 +41,12 @@ class QueryParamTest extends TestCase
 
     public function testMissingOptional()
     {
-        $parameter = new QueryParam();
+        $parameter = new Header();
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getQueryParams')
-            ->willReturn(['ot' => 10]);
+        $request->expects($this->once())->method('getHeaderLine')
+            ->with('Foo')
+            ->willReturn(null);
 
         $this->assertNull(
             $parameter->getValue($request, 'foo', null, false)
@@ -53,14 +55,15 @@ class QueryParamTest extends TestCase
 
     public function testMissingRequired()
     {
-        $parameter = new QueryParam();
+        $parameter = new Header();
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getQueryParams')
-            ->willReturn(['ot' => 10]);
+        $request->expects($this->once())->method('getHeaderLine')
+            ->with('Foo')
+            ->willReturn('');
 
         $this->expectException(ParameterException::class);
-        $this->expectExceptionMessage("Missing required query parameter 'foo'");
+        $this->expectExceptionMessage("Missing required header 'Foo'");
 
         $parameter->getValue($request, 'foo', null, true);
     }
@@ -70,6 +73,6 @@ class QueryParamTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage("Undefined parameter type 'big'");
 
-        new QueryParam('foo', 'big');
+        new Header('foo', 'big');
     }
 }
