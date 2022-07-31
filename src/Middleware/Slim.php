@@ -51,7 +51,12 @@ class Slim implements MiddlewareInterface
     {
         $callable = $route->getCallable();
 
-        if (is_array($callable) && is_a($callable[0], Controller::class, true) && isset($callable[1])) {
+        if (
+            is_array($callable) &&
+            is_a($callable[0], Controller::class, true) &&
+            isset($callable[1]) &&
+            $callable[1] !== '__invoke'
+        ) {
             $request = $request
                 ->withAttribute("route:action", $callable[1])
                 ->withAttribute('__route__', $route->setCallable([$callable[0], '__invoke']));
@@ -63,7 +68,7 @@ class Slim implements MiddlewareInterface
     protected function setPathParameters(ServerRequestInterface $request, Route $route): ServerRequestInterface
     {
         foreach ($route->getArguments() as $key => $value) {
-            $request = $request->withAttribute("route:\{$key\}", $value);
+            $request = $request->withAttribute('route:{' . $key . '}', $value);
         }
 
         return $request;
