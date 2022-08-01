@@ -2,7 +2,6 @@
 
 namespace Jasny\Test\Controller\Middleware;
 
-use Cassandra\Exception\UnauthorizedException;
 use Jasny\Controller\Controller;
 use Jasny\Controller\Middleware\Slim;
 use PHPUnit\Framework\TestCase;
