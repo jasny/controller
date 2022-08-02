@@ -12,6 +12,13 @@ trait CheckResponse
 {
     abstract protected function getResponse(): ResponseInterface;
 
+    /**
+     * Get the response status code
+     */
+    protected function getStatusCode(): int
+    {
+        return $this->getResponse()->getStatusCode() ?: 200;
+    }
 
     /**
      * Get the value of the response header, or an empty string if not set.
@@ -23,20 +30,20 @@ trait CheckResponse
 
     
     /**
-     * Check if response is a 1xx informational
+     * Check if response is 1xx informational
      */
     protected function isInformational(): bool
     {
-        $code = $this->getResponse()->getStatusCode() ?: 200;
+        $code = $this->getStatusCode();
         return $code >= 100 && $code < 200;
     }
     
     /**
-     * Check if response is 2xx succesful, or empty
+     * Check if response is 2xx successful (or empty)
      */
     protected function isSuccessful(): bool
     {
-        $code = $this->getResponse()->getStatusCode() ?: 200;
+        $code = $this->getStatusCode();
         return $code >= 200 && $code < 300;
     }
     
@@ -45,7 +52,7 @@ trait CheckResponse
      */
     protected function isRedirection(): bool
     {
-        $code = $this->getResponse()->getStatusCode() ?: 200;
+        $code = $this->getStatusCode();
         return $code >= 300 && $code < 400;
     }
     
@@ -54,16 +61,16 @@ trait CheckResponse
      */
     protected function isClientError(): bool
     {
-        $code = $this->getResponse()->getStatusCode() ?: 200;
+        $code = $this->getStatusCode();
         return $code >= 400 && $code < 500;
     }
     
     /**
-     * Check if response is a 5xx redirect
+     * Check if response is a 5xx server error
      */
     protected function isServerError(): bool
     {
-        $code = $this->getResponse()->getStatusCode() ?: 200;
+        $code = $this->getStatusCode();
         return $code >= 500 && $code < 600;
     }
 

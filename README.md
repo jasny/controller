@@ -24,183 +24,194 @@ Install using composer
 Setup
 ---
 
-`Jasny\Controller` can be used as a base class for each of your controllers. It let's you interact with the
+`Jasny\Controller` can be used as a base class for each of your controllers. It lets you interact with the
 [PSR-7](http://www.php-fig.org/psr/psr-7/) server request and response in a friendly matter.
 
-A controller is a callable object. This means it implements the [`_invoke`](http://php.net/manual/en/language.oop5.magic.php#object.invoke)
-method. The invoke method takes a PSR-7 server request and response object and will return a modified response object.
-This all is abstracted away when you write your controller.
-
-### Run
-
-What you need to do is implement the `run()` method. It takes no arguments. The controller methods allow you to interact
-with the request and response objects.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+class MyController extends Jasny\Controller\Controller
 {
-    public function run()
+    public function hello(string $name, #[QueryParam] string $others = ''): void
     {
-        // Do something
+        $this->output("Hello, $name" . ($others ? " and $others" : ""), 'text');
     }
 }
 ```
 
-Note that the `run` method doesn't need to return anything. There are different methods to manipulate the response.
-Anything that is returned is simply ignored.
+Actions should be defined as public methods of the controller.
 
-Usage
+A controller is a callable object by implementing the [`__invoke`][] method. The invoke method takes a PSR-7
+server request and response object and will return a modified response object. This all is abstracted away when you
+write your controller.
+
+A router typically handles the request and chooses the correct controller object to call. The router is also responsible
+for extracting parameters from the url path and possibly choosing a method to call within the controller.
+
+[`__invoke`]: http://php.net/manual/en/language.oop5.magic.php#object.invoke
+
+### SwitchRoute
+
+This library works with [SwitchRoute](https://github.com/jasny/switch-route), a super-fast router based on generating
+code. The router needs a PSR-15 request handler to work with PRS-7 server requests, like [Relay](https://relayphp.com/).
+
+By default, the route action is converted to the method that will be called by the PSR-15 handler. For this library,
+`__invoke` should be called instead. The invoke method will take care of calling the right method within the controller.
+
+```php
+$stud = fn($str) => strtr(ucwords($str, '-'), ['-' => '']);
+
+$invoker = new Invoker(fn (?string $controller, ?string $action) => [
+    $controller !== null ? $stud($controller) . 'Controller' : $stud($action) . 'Action',
+    '__invoke'
+]);
+```
+
+**[See SwitchRoute for more information](https://github.com/jasny/switch-route#readme)**
+
+### Slim framework
+
+[Slim](https://www.slimframework.com/) is a PHP micro framework that works with PSR-7. To use this library with slim,
+use the provided middleware.
+
+```php
+use Jasny\Controller\Middleware\Slim as ControllerMiddleware;
+use Slim\Factory\AppFactory;
+
+$app = AppFactory::create();
+
+$app->add(new ControllerMiddleware());
+$app->addRoutingMiddleware();
+
+$app->get('/hello/{name}', ['MyController', 'hello']);
+```
+
+Optionally, the middleware can convert error responses from the controller to Slim HTTP Errors by passing `true` to the
+middleware constructor.
+
+```php
+use Jasny\Controller\Middleware\Slim as ControllerMiddleware;
+use Slim\Factory\AppFactory;
+
+$app = AppFactory::create();
+
+$app->add(new ControllerMiddleware(true));
+$app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, true, true);
+```
+
+Output
 ---
 
-### Output
-
-When using PSR-7, you shouldn't use `echo`. Instead, the `output()` method can be used to output stuff. To output
-'Hello world' as text, you'd do `$this->output("Hello world", 'text')`. To output an array as JSON you'd use
-`$this->output($array, 'json')`.
-
-For some types `output` will also encode the data. Almost any data can be encoded to JSON. For XML the controller
-expects a `SimpleXML` or `DOM` object as output data.
-
-Setting the output type will set the `Content-Type` header. The type should match commen file extensions. The controller
-uses [Dflydev's Apache MIME Types](https://github.com/dflydev/dflydev-apache-mime-types) library to get the mime type
-for the type.
-
-Instead of using a short type, you can also specify the full mime type as `$this->output($array, 'application/json')`.
+When using PSR-7, you shouldn't use `echo`. Instead, use the `output` method of the controller.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+$this->output('Hello world');
+```
+
+A second argument may be passed, which sets the `Content-Type` header. You can pass a mime type like 'text/html'.
+Alternatively you can  use a common file extension like 'txt'. The controller uses the
+[ralouphie/mimey](https://github.com/ralouphie/mimey) library to get the mime type.
+
+```php
+class MyController extends Jasny\Controller\Controller
 {
     /**
-     * Output a random number between 0 and 100 as plain text
+     * Output a random number between 0 and 100 as HTML
      */
-    public function run()
+    public function random()
     {
         $number = rand(0, 100);
-        $this->output($number, 'text');
+        $this->output("<h1>$number</h1>", 'html');
     }
 }
 ```
 
-You're not required to set the output type. In that case, the controller will guess. If the `Content-Type` response
-header has been explictly set ([more on that later](#set-the-content-type)), it will be used. If nothing is set, it
-defaults to `text/html`.
+### JSON
 
-### Query parameters (aka GET data)
-
-With PSR-7, you shouldn't use the `$_GET` super global. To get all query parameters (typically in `$_GET`), use
-`$this->getQueryParams()`.
-
-You can check if query parameter 'foo' is set using `$this->hasQueryParam("foo")`. To get just that query parameter, use
-`$this->getQueryParam("foo")`. If the query parameter doesn't exist `getQueryParam` will return `null`.
-
-When getting a single query parameter using `getQueryParam()` you can specify a default as second argument. Additionally
-you can specify a [filter](http://php.net/manual/en/filter.filters.php) with filter options.
+The `json` method can be used to output data as JSON.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+class MyController extends Jasny\Controller\Controller
 {
-    public function run()
+    /**
+     * Output 5 random number between 0 and 100 as JSON
+     */
+    public function random()
     {
-        $page = $this->getQueryParam("page", 1, FILTER_VALIDATE_INT, ['min_range' => 1]);
-        // ...
+        $numbers = array_map(fn() => rand(0, 100), range(1, 5));
+        $this->json($numbers);
     }
 }
 ```
 
-You can get a number of specific query parameters, optionally with default values, using `getQueryParams()`.
+### Response status
 
-```php
-list($foo, $bar, $zoo) = $this->getQueryParams(['foo', 'bar' => 10, 'zoo' => 'monkey']);
-```
-
-### Input data (aka POST data)
-
-With PSR-7, you shouldn't use the `$_POST` and `$_FILES` super globals directly. Instead the `getInput()` method will
-get the input data.
-
-If the POST request is a form upload, so the `Content-Type` of the request is either `application/x-url-form-encoded` or
-`multipart/form-data`, the input is a mixture of post data and uploaded files. For other data type, the PSR response
-object will try to parse the content body. This typically works for JSON and XML. In other cases, calling `getInput()`
-will return `null`.
-
-```php
-class MyPageController extends Jasny\Controller\Controller
-{
-    public function run()
-    {
-        $data = $this->getInput();
-        // ...
-    }
-}
-```
-
-### Setting the response status
-
-To set the response type you can use the `respondWith()` method. This method can take the response status as integer or
+To set the response status you can use the `status()` method. This method can take the response status as integer or
 as string specifying both the status code and phrase.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+class MyController extends Jasny\Controller\Controller
 {
-    public function run()
+    public function process()
     {
-        if ($this->hasQueryParam('type')) {
-            $this->respondWith("400 Bad Request");
-            $this->output("Missing the 'type' query parameters");
-            return;
+        if (!in_array($size, ['XS', 'S', 'M', 'L', 'XL'])) {
+            return $this
+                ->status("400 Bad Request")
+                ->output("Invalid size: $size");
         }
 
         // Create something ...
         
-        $this->header("Location: http://www.example.com/foo/something");
-        $this->respondWith(201);
-        $this->output($something, 'json');
+        return $this
+            ->status(201)
+            ->header("Location: http://www.example.com/foo/something")
+            ->json($something);
     }
 }
 ```
 
-_Note that the `respondWith()` method can also be used to [set the `Content-Type` response header](#set-the-content-type)._
-
 Alternatively and preferably you can use helper method to set a specific response status. Some method can optionally
-take arguments that make sence for that status.
+take arguments that make sense for that status.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+class MyController extends Jasny\Controller\Controller
 {
-    public function run()
+    public function process(string $size)
     {
-        if ($this->hasQueryParam('type')) {
-            return $this->badRequest("Missing the 'type' query parameters"); // Doesn't actually return anything
+        if (!in_array($size, ['XS', 'S', 'M', 'L', 'XL'])) {
+            return $this->badRequest()->output("Invalid size: $size");
         }
 
         // Create something ...
         
-        $this->created("http://www.example.com/foo/something");
-        $this->output($something, 'json');
+        return $this
+            ->status(201)
+            ->header("Location: http://www.example.com/foo/something")
+            ->json($something);
     }
 }
 ```
 
 The following methods for setting the output status are available
 
-| status code             | method                                                                    |                                                     |
-| ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
-| [200][]                 | `ok()`                                                                    |                                                     |
-| [201][]                 | `created(string $location = null)`                                        | Optionally set the `Location` header                |
-| [203][]                 | `accepted()`                                                              |                                                     |
-| [204][]                 | `noContent(int $code = 204)`                                              |                                                     |
-| [206][]                 | `partialContent(int $rangeFrom, int $rangeTo, int $totalSize)`            | Set the `Content-Range` and `Content-Length` header |
-| [30x][303]              | `redirect(string $url, int $code = 303)`                                  | Url for the `Location` header                       |
-| [303][]                 | `back()`                                                                  | Redirect to the referer*                            |
-| [304][]                 | `notModified()`                                                           |                                                     |
-| [40x][400]              | `badRequest(string $message, int $code = 400)`                            |                                                     |
-| [401][]                 | `requireAuth()` or `requireLogin()`                                       |                                                     |
-| [402][]                 | `paymentRequired(string $message = "Payment required")`                   |                                                     |
-| [403][]                 | `forbidden(string $message = "Access denied")`                            |                                                     |
-| [404][]/[405][]/[410][] | `notFound(string $message = "Not found", int $code = 404)`                |                                                     |
-| [409][]                 | `conflict(string $message)`                                               |                                                     |
-| [429][]                 | `tooManyRequests(string $message = "Too many requests")`                  |                                                     |
-| [5xx][500]              | `error(string $message = "An unexpected error occured", int $code = 500)` |                                                     |
+| status code             | method                                                         |                                                     |
+|-------------------------|----------------------------------------------------------------| --------------------------------------------------- |
+| [200][]                 | `ok()`                                                         |                                                     |
+| [201][]                 | `created(string $location = null)`                             | Optionally set the `Location` header                |
+| [202][]                 | `accepted()`                                                   |                                                     |
+| [204][]/[205][]         | `noContent(int $code = 204)`                                   |                                                     |
+| [206][]                 | `partialContent(int $rangeFrom, int $rangeTo, int $totalSize)` | Set the `Content-Range` and `Content-Length` header |
+| [30x][303]              | `redirect(string $url, int $code = 303)`                       | Url for the `Location` header                       |
+| [303][]                 | `back()`                                                       | Redirect to the referer*                            |
+| [304][]                 | `notModified()`                                                |                                                     |
+| [40x][400]              | `badRequest(int $code = 400)`                                  |                                                     |
+| [401][]                 | `unauthorized()`                                               |                                                     |
+| [402][]                 | `paymentRequired()`                                            |                                                     |
+| [403][]                 | `forbidden()`                                                  |                                                     |
+| [404][]/[405][]/[410][] | `notFound(int $code = 404)`                                    |                                                     |
+| [409][]                 | `conflict()`                                                   |                                                     |
+| [429][]                 | `tooManyRequests()`                                            |                                                     |
+| [5xx][500]              | `error(int $code = 500)`                                       |                                                     |
 
 - Some methods take a `$message` argument. This will set the output.
 - If a method takes a `$code` argument, you can specify the status code. _Note that you can specify any status code,
@@ -211,6 +222,7 @@ The following methods for setting the output status are available
 [201]: https://httpstatuses.com/201
 [203]: https://httpstatuses.com/203
 [204]: https://httpstatuses.com/204
+[205]: https://httpstatuses.com/205
 [206]: https://httpstatuses.com/206
 [303]: https://httpstatuses.com/303
 [304]: https://httpstatuses.com/304
@@ -225,14 +237,27 @@ The following methods for setting the output status are available
 [429]: https://httpstatuses.com/429
 [500]: https://httpstatuses.com/500
 
-### Setting response headers
+Sometimes it's useful to check the status code that has been set for the response. This can be done with the
+`getStatusCode()` method. In addition, there are methods to check the type of status.
+
+| status code | method              |
+|-------------|---------------------|
+| 1xx         | `isInformational()` |
+| 2xx         | `isSuccessful()`    |
+| 3xx         | `isRedirection()`   |
+| 4xx         | `isClientError()`   |
+| 5xx         | `isServerError()`   |
+| 4xx or 5xx  | `isError()`         |
+
+
+### Response headers
 
 You can set the response header using the `setResponseHeader()` method.
 
 ```php
-class MyPageController extends Jasny\Controller\Controller
+class MyController extends Jasny\Controller\Controller
 {
-    public function run()
+    public function process()
     {
         $this->header("Content-Language", "nl");
         // ...
@@ -240,22 +265,52 @@ class MyPageController extends Jasny\Controller\Controller
 }
 ```
 
-By default response headers get overwritting. In some cases you want to have duplicate headers. In that case set the
-third argument to `false`, eg `setResponseHeader($header, $value, false)`.
+By default, response headers are overwritten. In some cases you want to have duplicate headers. In that case set the
+third argument to `true`, eg `header($header, $value, true)`.
 
 ```php
-$this->setResponseHeaders("Cache-Control", "no-cache");
-$this->setResponseHeaders("Cache-Control", "no-store", false);
+$this->header("Cache-Control", "no-cache"); // overwrite header
+$this->header("Cache-Control", "no-store", true); // add header
 ```
 
-#### Set the content type
+Input
+---
 
-To set the `Content-Type` header, you can also use the `respondWith()` method. You can specify the full mime type as
-`$this->respondWith("application/json")`. Alternative you can use a type (which corresponds with a file extension). The
-controller uses [Dflydev's Apache MIME Types](https://github.com/dflydev/dflydev-apache-mime-types) library to get the
-mime type for the type.
+With PSR-7, you shouldn't use super globals `$_GET`, `$_POST`, `$_COOKIE`, and `$_SERVER`. Instead, these values are
+available through the server request object.
 
-You can use `respondWith()` to set both the response status and content type as `$this->respondWith(200, "json")`.
+### Path parameters
 
-The method `byDefaultSerializeTo()` can be used to let the application automatically change the content type the output
-data isn't a string. You can set it to eliminate having to specify the content type with the `output()` method.
+A router may extract parameters from the request URL. In the following example, the url path `/hello/world`,
+the path parameter `name` will have the value `"world"`.
+
+```php
+$app->get('/hello/{name}', ['MyController', 'hello']);
+```
+
+The controller will map each argument of a method to a parameter. By default, arguments are mapped to path parameters.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello(string $name): void
+    {
+        $this->output("Hello, $name");
+    }
+}
+```
+
+The name of the argument will be used as parameter name. However, it's possible to specify a name using
+[attributes](https://www.php.net/manual/en/language.attributes.overview.php).
+
+```php
+use Jasny\Controller\Parameter\PathParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello(#[PathParam("name")] string $subject): void
+    {
+        $this->output("Hello, $subject");
+    }
+}
+```
