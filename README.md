@@ -197,7 +197,7 @@ The following methods for setting the output status are available
 | status code             | method                                                         |                                                     |
 |-------------------------|----------------------------------------------------------------| --------------------------------------------------- |
 | [200][]                 | `ok()`                                                         |                                                     |
-| [201][]                 | `created(string $location = null)`                             | Optionally set the `Location` header                |
+| [201][]                 | `created(?string $location = null)`                            | Optionally set the `Location` header                |
 | [202][]                 | `accepted()`                                                   |                                                     |
 | [204][]/[205][]         | `noContent(int $code = 204)`                                   |                                                     |
 | [206][]                 | `partialContent(int $rangeFrom, int $rangeTo, int $totalSize)` | Set the `Content-Range` and `Content-Length` header |
@@ -216,10 +216,11 @@ The following methods for setting the output status are available
 - Some methods take a `$message` argument. This will set the output.
 - If a method takes a `$code` argument, you can specify the status code. _Note that you can specify any status code,
   though only some should be used (don't use a 400 status with `redirect()`)._
-- *The `back()` method will redirect to the referer, but only if the referer is from the same domain as the current url.
+- The `back()` method will redirect to the referer, but only if the referer is from the same domain as the current url.
 
 [200]: https://httpstatuses.com/200
 [201]: https://httpstatuses.com/201
+[202]: https://httpstatuses.com/202
 [203]: https://httpstatuses.com/203
 [204]: https://httpstatuses.com/204
 [205]: https://httpstatuses.com/205
@@ -277,7 +278,24 @@ Input
 ---
 
 With PSR-7, you shouldn't use super globals `$_GET`, `$_POST`, `$_COOKIE`, and `$_SERVER`. Instead, these values are
-available through the server request object.
+available through the server request object. This is done using [PHP attributes][].
+
+| Attribute     | Arguments  |                                          |
+|---------------|------------|------------------------------------------|
+| PathParam     | name, type | Path parameter obtained from router      |
+| QueryParam    | name, type | Query parameter                          |
+| Query         |            | All query parameters                     |
+| BodyParam     | name, type | Body parameter                           |
+| Body          |            | All body paramters or raw body as string |
+| Cookie        | name, type | Cookie parameter                         |
+| Cookies       |            | All cookies as key/value                 |
+| UploadedFile  | name       | PSR-7 uploaded file(s)                   |
+| UploadedFiles |            | Associative array of all uploaded files  |
+| Header        | name, type | Request header (as string)               |
+| Headers       |            | All headers as associative array         |     
+| Attribute     | name, type | PSR-7 attribute set by middleware        |
+
+[PHP attributes]: https://www.php.net/manual/en/language.attributes.overview.php
 
 ### Path parameters
 
@@ -301,7 +319,7 @@ class MyController extends Jasny\Controller\Controller
 ```
 
 The name of the argument will be used as parameter name. However, it's possible to specify a name using
-[attributes](https://www.php.net/manual/en/language.attributes.overview.php).
+attributes.
 
 ```php
 use Jasny\Controller\Parameter\PathParam;
@@ -313,4 +331,121 @@ class MyController extends Jasny\Controller\Controller
         $this->output("Hello, $subject");
     }
 }
+```
+
+It's possible to specify a type as second argument of the attribute. By default, the type is determined on the type of
+the argument.
+
+### Request parameters
+
+The controller will pass request parameters as arguments. This is specified by an attribute
+
+* `QueryParam`
+* `BodyParam`
+* `Cookie`
+* `UploadedFile`
+* `Header`
+
+```php
+use Jasny\Controller\Parameter\QueryParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello(#[QueryParam] string $name, #[QueryParam("other") string $second = '']): void
+    {
+        $this->output("Hello, $name" . ($second ? " and $second" : ''));
+    }
+}
+```
+
+Optionally specify the name as first argument of the attribute. If it's omitted, the name of the argument is used.
+
+* For `QueryParam`, underscores are replaced with dashes. Eg: `$foo_bar` will translate to query param `foo-bar`.
+* For `Header`, words are capitalized and underscores become dashes. Eg: `$foo_bar` translates to header `Foo-Bar`.
+
+If the argument is not optional and the query parameter hasn't been supplied, a `ParameterException` is thrown.
+
+It's possible to specify a type as second argument of the attribute. By default, the type is determined on the type of
+the argument.
+
+### All request parameters
+
+To get all request parameters of a specific type, the following attributes are available.
+
+* `Query`
+* `Body`
+* `Cookies`
+* `UploadedFiles`
+* `Headers`
+
+```php
+use Jasny\Controller\Parameter\Query;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function listItems(#[Query] array $filter): void
+    {
+        // ...
+    }
+}
+```
+
+For the `#[Body]` attribute, the type of the argument should either be an array or a string. If an array is passed the
+argument will be the parsed body. In case of a string it will be the raw body.
+
+### Request attribute
+
+Middleware can set attributes of the PSR-7 request. These reqest attributes are available as arguments by using the
+`Attribute` attribute.
+
+```php
+use Jasny\Controller\Parameter\Attribute;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function dashboard(#[Attribute('session_user')] array $user): void
+    {
+        // ...
+    }
+}
+```
+
+Similar to request and path parameters, the name can be specified. If omitted, the argument name is used. The type can
+be specified as second argument.
+
+### Parameter types
+
+Parameter attributes use the [`filter_var`](https://www.php.net/filter_var) function to sanitize input. The following
+filters are defined
+
+| type  | filter                |
+|-------|-----------------------|
+| bool  | FILTER_VALIDATE_BOOL  |
+| int   | FILTER_VALIDATE_INT   |
+| float | FILTER_VALIDATE_FLOAT |
+| email | FILTER_VALIDATE_EMAIL |
+| url   | FILTER_VALIDATE_URL   |
+
+For other types (like `string`), no filter is applied.
+
+By default, the type of the argument is used. Alternatively, the type may be specified when defining the attribute.
+
+```php
+use Jasny\Controller\Parameter\PostParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function message(#[PostParam(type: 'email')] array $email): void
+    {
+        // ...
+    }
+}
+```
+
+To add custom types, add filters to `SingleParameter::$types`
+
+```php
+use Jasny\Controller\Parameter\SingleParameter;
+
+SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
 ```

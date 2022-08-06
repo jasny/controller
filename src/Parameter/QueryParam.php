@@ -13,7 +13,7 @@ class QueryParam extends SingleParameter
      */
     public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
     {
-        $key = $this->key ?? $name;
+        $key = $this->key ?? str_replace('_', '-', $name);
         $params = $request->getQueryParams();
 
         if ($required && !isset($params[$key])) {

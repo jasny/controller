@@ -6,23 +6,20 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class BodyParam extends SingleParameter
+class UploadedFile extends SingleParameter
 {
     /**
-     * Get request body parameter.
-     *
-     * Optionally apply filtering to the value.
-     * @link http://php.net/manual/en/filter.filters.php
+     * Get uploaded file from request.
      */
     public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
     {
         $key = $this->key ?? $name;
-        $params = $request->getParsedBody();
+        $params = $request->getUploadedFiles();
 
         if ($required && !isset($params[$key])) {
-            throw new ParameterException("Missing required body parameter '$key'");
+            throw new ParameterException("Missing required uploaded file '$key'");
         }
 
-        return $this->filter($params[$key] ?? null, $type);
+        return $params[$key] ?? null;
     }
 }

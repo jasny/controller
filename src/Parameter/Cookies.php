@@ -5,15 +5,15 @@ namespace Jasny\Controller\Parameter;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class Query implements Parameter
+class Cookies implements Parameter
 {
     /**
-     * Get all query parameters.
+     * Get a cookies.
      *
      * @return array<string,mixed>
      */
     public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): array
     {
-        return $request->getQueryParams();
+        return $request->getCookieParams();
     }
 }
