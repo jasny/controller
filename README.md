@@ -1,8 +1,7 @@
 Jasny Controller
 ===
 
-[![Build Status](https://travis-ci.org/jasny/controller.svg?branch=master)](https://travis-ci.org/jasny/controller)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/controller/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
+[![PHP](https://github.com/jasny/controller/actions/workflows/php.yml/badge.svg)](https://github.com/jasny/controller/actions/workflows/php.yml)[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/controller/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/jasny/controller/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jasny/controller/?branch=master)
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
@@ -297,6 +296,78 @@ available through the server request object. This is done using [PHP attributes]
 
 [PHP attributes]: https://www.php.net/manual/en/language.attributes.overview.php
 
+The controller will map each argument of a method to a parameter. By default, arguments are mapped to path parameters.
+
+### Parameter name
+
+For single parameters, the name of the argument will be used as parameter name. However, it's possible to specify a name
+when defining the attribute.
+
+```php
+use Jasny\Controller\Parameter\PathParam;
+use Jasny\Controller\Parameter\QueryParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello(#[PathParam] string $subject, #[QueryParam('and')] string $other = ''): void
+    {
+        $this->output("Hello $subject" . ($other ? " and $other" : ""));
+    }
+}
+```
+
+_`#[PathParam]` could be omitted, since it's the default behaviour._
+
+### Parameter type
+
+It's possible to specify a type as second argument when defining the attribute. By default, the type is determined on
+the type of the argument.
+
+```php
+use Jasny\Controller\Parameter\BodyParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function send(#[BodyParam(type: 'email')] string $emailAddress): void
+    {
+        // ...
+    }
+}
+```
+
+Parameter attributes use the [`filter_var`](https://www.php.net/filter_var) function to sanitize input. The following
+filters are defined
+
+| type  | filter                |
+|-------|-----------------------|
+| bool  | FILTER_VALIDATE_BOOL  |
+| int   | FILTER_VALIDATE_INT   |
+| float | FILTER_VALIDATE_FLOAT |
+| email | FILTER_VALIDATE_EMAIL |
+| url   | FILTER_VALIDATE_URL   |
+
+For other types (like `string`), no filter is applied.
+
+```php
+use Jasny\Controller\Parameter\PostParam;
+
+class MyController extends Jasny\Controller\Controller
+{
+    public function message(#[PostParam(type: 'email')] array $email): void
+    {
+        // ...
+    }
+}
+```
+
+To add custom types, add filters to `SingleParameter::$types`
+
+```php
+use Jasny\Controller\Parameter\SingleParameter;
+
+SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
+```
+
 ### Path parameters
 
 A router may extract parameters from the request URL. In the following example, the url path `/hello/world`,
@@ -306,37 +377,7 @@ the path parameter `name` will have the value `"world"`.
 $app->get('/hello/{name}', ['MyController', 'hello']);
 ```
 
-The controller will map each argument of a method to a parameter. By default, arguments are mapped to path parameters.
-
-```php
-class MyController extends Jasny\Controller\Controller
-{
-    public function hello(string $name): void
-    {
-        $this->output("Hello, $name");
-    }
-}
-```
-
-The name of the argument will be used as parameter name. However, it's possible to specify a name using
-attributes.
-
-```php
-use Jasny\Controller\Parameter\PathParam;
-
-class MyController extends Jasny\Controller\Controller
-{
-    public function hello(#[PathParam("name")] string $subject): void
-    {
-        $this->output("Hello, $subject");
-    }
-}
-```
-
-It's possible to specify a type as second argument of the attribute. By default, the type is determined on the type of
-the argument.
-
-### Request parameters
+### Single request parameter
 
 The controller will pass request parameters as arguments. This is specified by an attribute
 
@@ -351,9 +392,9 @@ use Jasny\Controller\Parameter\QueryParam;
 
 class MyController extends Jasny\Controller\Controller
 {
-    public function hello(#[QueryParam] string $name, #[QueryParam("other") string $second = '']): void
+    public function hello(#[QueryParam] string $name, #[Header] string $browser_agent = ''): void
     {
-        $this->output("Hello, $name" . ($second ? " and $second" : ''));
+        // ...
     }
 }
 ```
@@ -364,9 +405,6 @@ Optionally specify the name as first argument of the attribute. If it's omitted,
 * For `Header`, words are capitalized and underscores become dashes. Eg: `$foo_bar` translates to header `Foo-Bar`.
 
 If the argument is not optional and the query parameter hasn't been supplied, a `ParameterException` is thrown.
-
-It's possible to specify a type as second argument of the attribute. By default, the type is determined on the type of
-the argument.
 
 ### All request parameters
 
@@ -412,40 +450,3 @@ class MyController extends Jasny\Controller\Controller
 
 Similar to request and path parameters, the name can be specified. If omitted, the argument name is used. The type can
 be specified as second argument.
-
-### Parameter types
-
-Parameter attributes use the [`filter_var`](https://www.php.net/filter_var) function to sanitize input. The following
-filters are defined
-
-| type  | filter                |
-|-------|-----------------------|
-| bool  | FILTER_VALIDATE_BOOL  |
-| int   | FILTER_VALIDATE_INT   |
-| float | FILTER_VALIDATE_FLOAT |
-| email | FILTER_VALIDATE_EMAIL |
-| url   | FILTER_VALIDATE_URL   |
-
-For other types (like `string`), no filter is applied.
-
-By default, the type of the argument is used. Alternatively, the type may be specified when defining the attribute.
-
-```php
-use Jasny\Controller\Parameter\PostParam;
-
-class MyController extends Jasny\Controller\Controller
-{
-    public function message(#[PostParam(type: 'email')] array $email): void
-    {
-        // ...
-    }
-}
-```
-
-To add custom types, add filters to `SingleParameter::$types`
-
-```php
-use Jasny\Controller\Parameter\SingleParameter;
-
-SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
-```
