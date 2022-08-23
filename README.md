@@ -184,8 +184,7 @@ class MyController extends Jasny\Controller\Controller
         // Create something ...
         
         return $this
-            ->status(201)
-            ->header("Location: http://www.example.com/foo/something")
+            ->created("http://www.example.com/foo/something")
             ->json($something);
     }
 }
@@ -279,29 +278,74 @@ Input
 With PSR-7, you shouldn't use super globals `$_GET`, `$_POST`, `$_COOKIE`, and `$_SERVER`. Instead, these values are
 available through the server request object. This is done using [PHP attributes][].
 
-| Attribute     | Arguments  |                                          |
-|---------------|------------|------------------------------------------|
-| PathParam     | name, type | Path parameter obtained from router      |
-| QueryParam    | name, type | Query parameter                          |
-| Query         |            | All query parameters                     |
-| BodyParam     | name, type | Body parameter                           |
-| Body          |            | All body paramters or raw body as string |
-| Cookie        | name, type | Cookie parameter                         |
-| Cookies       |            | All cookies as key/value                 |
-| UploadedFile  | name       | PSR-7 uploaded file(s)                   |
-| UploadedFiles |            | Associative array of all uploaded files  |
-| Header        | name, type | Request header (as string)               |
-| Headers       |            | All headers as associative array         |     
-| Attribute     | name, type | PSR-7 attribute set by middleware        |
+| Attribute     | Arguments  |                                           |
+|---------------|------------|-------------------------------------------|
+| PathParam     | name, type | Path parameter obtained from router       |
+| QueryParam    | name, type | Query parameter                           |
+| Query         |            | All query parameters                      |
+| BodyParam     | name, type | Body parameter                            |
+| Body          |            | All body parameters or raw body as string |
+| Cookie        | name, type | Cookie parameter                          |
+| Cookies       |            | All cookies as key/value                  |
+| UploadedFile  | name       | PSR-7 uploaded file(s)                    |
+| UploadedFiles |            | Associative array of all uploaded files   |
+| Header        | name, type | Request header (as string)                |
+| Headers       |            | All headers as associative array          |     
+| Attribute     | name, type | PSR-7 request attribute set by middleware |
 
 [PHP attributes]: https://www.php.net/manual/en/language.attributes.overview.php
 
 The controller will map each argument of a method to a parameter. By default, arguments are mapped to path parameters.
 
+### Parameters
+
+#### Path parameters
+
+A router may extract parameters from the request URL. In the following example, the url path `/hello/world`,
+the path parameter `name` will have the value `"world"`.
+
+```php
+$app->get('/hello/{name}', ['MyController', 'hello']);
+```
+
+#### Single request parameter
+
+The controller will pass PSR-7 request parameters as arguments. This is specified by an attribute
+
+* `QueryParam`
+* `BodyParam`
+* `Cookie`
+* `UploadedFile`
+* `Header`
+
+If the argument name is used as parameter name
+
+* for `QueryParam`, underscores are replaced with dashes. Eg: `$foo_bar` will translate to query param `foo-bar`.
+* for `Header`, words are capitalized and underscores become dashes. Eg: `$foo_bar` translates to header `Foo-Bar`.
+
+
+#### All request parameters
+
+To get all request parameters of a specific type, the following attributes are available.
+
+* `Query`
+* `Body`
+* `Cookies`
+* `UploadedFiles`
+* `Headers`
+
+For the `Body` attribute, the type of the argument should either be an array or a string. If an array is passed the
+argument will be the parsed body. In case of a string it will be the raw body.
+
+#### PSR-7 request attribute
+
+Middleware can set attributes of the PSR-7 request. These request attributes are available as arguments by using the
+`Attribute` attribute.
+
 ### Parameter name
 
-For single parameters, the name of the argument will be used as parameter name. However, it's possible to specify a name
-when defining the attribute.
+For single parameters, the name of the argument will be used as parameter name. Alternatively, it's possible to specify
+a name when defining the attribute.
 
 ```php
 use Jasny\Controller\Parameter\PathParam;
@@ -309,14 +353,14 @@ use Jasny\Controller\Parameter\QueryParam;
 
 class MyController extends Jasny\Controller\Controller
 {
-    public function hello(#[PathParam] string $subject, #[QueryParam('and')] string $other = ''): void
+    public function hello(#[PathParam] string $name, #[QueryParam('and')] string $other = ''): void
     {
-        $this->output("Hello $subject" . ($other ? " and $other" : ""));
+        $this->output("Hello $name" . ($other ? " and $other" : ""));
     }
 }
 ```
 
-_`#[PathParam]` could be omitted, since it's the default behaviour._
+_Note: `#[PathParam]` could be omitted, since it's the default behaviour._
 
 ### Parameter type
 
@@ -367,86 +411,3 @@ use Jasny\Controller\Parameter\SingleParameter;
 
 SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
 ```
-
-### Path parameters
-
-A router may extract parameters from the request URL. In the following example, the url path `/hello/world`,
-the path parameter `name` will have the value `"world"`.
-
-```php
-$app->get('/hello/{name}', ['MyController', 'hello']);
-```
-
-### Single request parameter
-
-The controller will pass request parameters as arguments. This is specified by an attribute
-
-* `QueryParam`
-* `BodyParam`
-* `Cookie`
-* `UploadedFile`
-* `Header`
-
-```php
-use Jasny\Controller\Parameter\QueryParam;
-
-class MyController extends Jasny\Controller\Controller
-{
-    public function hello(#[QueryParam] string $name, #[Header] string $browser_agent = ''): void
-    {
-        // ...
-    }
-}
-```
-
-Optionally specify the name as first argument of the attribute. If it's omitted, the name of the argument is used.
-
-* For `QueryParam`, underscores are replaced with dashes. Eg: `$foo_bar` will translate to query param `foo-bar`.
-* For `Header`, words are capitalized and underscores become dashes. Eg: `$foo_bar` translates to header `Foo-Bar`.
-
-If the argument is not optional and the query parameter hasn't been supplied, a `ParameterException` is thrown.
-
-### All request parameters
-
-To get all request parameters of a specific type, the following attributes are available.
-
-* `Query`
-* `Body`
-* `Cookies`
-* `UploadedFiles`
-* `Headers`
-
-```php
-use Jasny\Controller\Parameter\Query;
-
-class MyController extends Jasny\Controller\Controller
-{
-    public function listItems(#[Query] array $filter): void
-    {
-        // ...
-    }
-}
-```
-
-For the `#[Body]` attribute, the type of the argument should either be an array or a string. If an array is passed the
-argument will be the parsed body. In case of a string it will be the raw body.
-
-### Request attribute
-
-Middleware can set attributes of the PSR-7 request. These reqest attributes are available as arguments by using the
-`Attribute` attribute.
-
-```php
-use Jasny\Controller\Parameter\Attribute;
-
-class MyController extends Jasny\Controller\Controller
-{
-    public function dashboard(#[Attribute('session_user')] array $user): void
-    {
-        // ...
-    }
-}
-```
-
-Similar to request and path parameters, the name can be specified. If omitted, the argument name is used. The type can
-be specified as second argument.
