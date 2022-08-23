@@ -8,7 +8,7 @@ Jasny Controller
 
 A general purpose controller for PSR-7
 
-**The controller is responsible handling the HTTP request, maninipulate the modal and initiate the view.**
+**The controller is responsible handling the HTTP request, manipulate the model and initiate the view.**
 
 The code in the controller read as a high level description of each action. The controller should not contain
 implementation details. This belongs in the model, view or in services and libraries.
