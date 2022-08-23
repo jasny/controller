@@ -8,6 +8,11 @@ use Psr\Http\Message\ServerRequestInterface;
 #[\Attribute]
 class UploadedFile extends SingleParameter
 {
+    public function __construct(?string $key = null)
+    {
+        parent::__construct($key);
+    }
+
     /**
      * Get uploaded file from request.
      */

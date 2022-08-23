@@ -17,7 +17,7 @@ class Attribute extends SingleParameter
         $value = $request->getAttribute($key);
 
         if ($required && $value === null) {
-            throw new ParameterException("Missing required attribute '$key'");
+            throw new ParameterException("Missing required request attribute '$key'");
         }
 
         return $this->filter($value, $type);

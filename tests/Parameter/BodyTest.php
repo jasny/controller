@@ -40,37 +40,9 @@ class BodyTest extends TestCase
         $request->expects($this->never())->method('getBody');
         $request->expects($this->once())->method('getParsedBody')
             ->willReturn(['number' => 42, 'color' => 'red']);
-        $request->expects($this->once())->method('getHeaderLine')
-            ->with('Content-Type')
-            ->willReturn('application/x-www-form-urlencoded');
-        $request->expects($this->never())->method('getUploadedFiles');
 
         $value = $this->parameter->getValue($request, 'foo', 'array');
 
         $this->assertEquals(['number' => 42, 'color' => 'red'], $value);
-    }
-
-    public function testParsedBodyWithFiles()
-    {
-        $files = [
-            'document' => $this->createMock(UploadedFileInterface::class),
-            'image' => $this->createMock(UploadedFileInterface::class),
-        ];
-
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->never())->method('getBody');
-        $request->expects($this->once())->method('getParsedBody')
-            ->willReturn(['number' => 42, 'color' => 'red', 'image' => false]);
-        $request->expects($this->once())->method('getHeaderLine')
-            ->with('Content-Type')
-            ->willReturn('multipart/form-data');
-        $request->expects($this->once())->method('getUploadedFiles')->willReturn($files);
-
-        $value = $this->parameter->getValue($request, 'foo', 'array');
-
-        $this->assertEquals(42, $value['number'] ?? null);
-        $this->assertEquals('red', $value['color'] ?? null);
-        $this->assertSame($files['document'], $value['document'] ?? null);
-        $this->assertSame($files['image'], $value['image'] ?? null);
     }
 }

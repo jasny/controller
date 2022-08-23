@@ -2,37 +2,37 @@
 
 namespace Jasny\Test\Controller\Parameter;
 
-use Jasny\Controller\Parameter\Header;
+use Jasny\Controller\Parameter\Attribute;
 use Jasny\Controller\ParameterException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * @covers \Jasny\Controller\Parameter\Header
+ * @covers \Jasny\Controller\Parameter\Attribute
  * @covers \Jasny\Controller\Parameter\SingleParameter
  */
-class HeaderTest extends TestCase
+class AttributeTest extends TestCase
 {
     public function provider()
     {
         return [
-            ['Foo', 'int', 'bar', 'string', 'Foo', 42],
-            ['Foo', null, 'bar', 'string', 'Foo', '42'],
-            [null, 'int', 'bar_zar', 'string', 'Bar-Zar', 42],
-            [null, null, 'bar_zar', 'string', 'Bar-Zar', '42'],
+            ['foo', 'int', 'bar', 'string', 'foo', 42],
+            ['foo', null, 'bar', 'string', 'foo', '42'],
+            [null, 'int', 'bar', 'string', 'bar', 42],
+            [null, null, 'bar', 'string', 'bar', '42'],
         ];
     }
 
     /**
      * @dataProvider provider
      */
-    public function test($consKey, $consType, $name, $type, $header, $expected)
+    public function test($consKey, $consType, $name, $type, $Attribute, $expected)
     {
-        $parameter = new Header($consKey, $consType);
+        $parameter = new Attribute($consKey, $consType);
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getHeaderLine')
-            ->with($header)
+        $request->expects($this->once())->method('getAttribute')
+            ->with($Attribute)
             ->willReturn('42');
 
         $value = $parameter->getValue($request, $name, $type);
@@ -41,28 +41,29 @@ class HeaderTest extends TestCase
 
     public function testMissingOptional()
     {
-        $parameter = new Header();
+        $parameter = new Attribute();
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getHeaderLine')
-            ->with('Foo')
-            ->willReturn('');
+        $request->expects($this->once())->method('getAttribute')
+            ->with('foo')
+            ->willReturn(null);
 
-        $value = $parameter->getValue($request, 'foo', null, false);
-        $this->assertEquals('', $value);
+        $this->assertNull(
+            $parameter->getValue($request, 'foo', null, false)
+        );
     }
 
     public function testMissingRequired()
     {
-        $parameter = new Header();
+        $parameter = new Attribute();
 
         $request = $this->createMock(ServerRequestInterface::class);
-        $request->expects($this->once())->method('getHeaderLine')
-            ->with('Foo')
-            ->willReturn('');
+        $request->expects($this->once())->method('getAttribute')
+            ->with('foo')
+            ->willReturn(null);
 
         $this->expectException(ParameterException::class);
-        $this->expectExceptionMessage("Missing required header 'Foo'");
+        $this->expectExceptionMessage("Missing required request attribute 'foo'");
 
         $parameter->getValue($request, 'foo', null, true);
     }
@@ -72,6 +73,6 @@ class HeaderTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage("Undefined parameter type 'big'");
 
-        new Header('foo', 'big');
+        new Attribute('foo', 'big');
     }
 }
