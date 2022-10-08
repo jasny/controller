@@ -32,12 +32,14 @@ class MyController extends Jasny\Controller\Controller
 {
     public function hello(string $name, #[QueryParam] string $others = ''): void
     {
-        $this->output("Hello, $name" . ($others ? " and $others" : ""), 'text');
+        $this->output("Hello $name" . ($others ? " and $others" : ""), 'text');
     }
 }
 ```
 
-Actions should be defined as public methods of the controller.
+> Visiting `https://example.com/hello/Arnold&others=friends` would output `Hello Arnold and friends`.
+
+Actions are defined as public methods of the controller.
 
 A controller is a callable object by implementing the [`__invoke`][] method. The invoke method takes a PSR-7
 server request and response object and will return a modified response object. This all is abstracted away when you
@@ -101,7 +103,8 @@ $app->addErrorMiddleware(true, true, true);
 Output
 ---
 
-When using PSR-7, you shouldn't use `echo`. Instead, use the `output` method of the controller.
+When using PSR-7, you shouldn't use `echo`, because it makes it harder to write tests. Instead, use the `output` method
+of the controller, which writes to the response body stream object.
 
 ```php
 $this->output('Hello world');
@@ -127,13 +130,13 @@ class MyController extends Jasny\Controller\Controller
 
 ### JSON
 
-The `json` method can be used to output data as JSON.
+The `json` method can be used to serialize and output data as JSON.
 
 ```php
 class MyController extends Jasny\Controller\Controller
 {
     /**
-     * Output 5 random number between 0 and 100 as JSON
+     * Output 5 random numbers between 0 and 100 as JSON
      */
     public function random()
     {
@@ -151,7 +154,7 @@ as string specifying both the status code and phrase.
 ```php
 class MyController extends Jasny\Controller\Controller
 {
-    public function process()
+    public function process(string $size)
     {
         if (!in_array($size, ['XS', 'S', 'M', 'L', 'XL'])) {
             return $this
@@ -193,14 +196,14 @@ class MyController extends Jasny\Controller\Controller
 The following methods for setting the output status are available
 
 | status code             | method                                                         |                                                     |
-|-------------------------|----------------------------------------------------------------| --------------------------------------------------- |
+|-------------------------|----------------------------------------------------------------|-----------------------------------------------------|
 | [200][]                 | `ok()`                                                         |                                                     |
 | [201][]                 | `created(?string $location = null)`                            | Optionally set the `Location` header                |
 | [202][]                 | `accepted()`                                                   |                                                     |
 | [204][]/[205][]         | `noContent(int $code = 204)`                                   |                                                     |
 | [206][]                 | `partialContent(int $rangeFrom, int $rangeTo, int $totalSize)` | Set the `Content-Range` and `Content-Length` header |
 | [30x][303]              | `redirect(string $url, int $code = 303)`                       | Url for the `Location` header                       |
-| [303][]                 | `back()`                                                       | Redirect to the referer*                            |
+| [303][]                 | `back()`                                                       | Redirect to the referer                             |
 | [304][]                 | `notModified()`                                                |                                                     |
 | [40x][400]              | `badRequest(int $code = 400)`                                  |                                                     |
 | [401][]                 | `unauthorized()`                                               |                                                     |
@@ -212,8 +215,7 @@ The following methods for setting the output status are available
 | [5xx][500]              | `error(int $code = 500)`                                       |                                                     |
 
 - Some methods take a `$message` argument. This will set the output.
-- If a method takes a `$code` argument, you can specify the status code. _Note that you can specify any status code,
-  though only some should be used (don't use a 400 status with `redirect()`)._
+- If a method takes a `$code` argument, you can specify the status code.
 - The `back()` method will redirect to the referer, but only if the referer is from the same domain as the current url.
 
 [200]: https://httpstatuses.com/200
@@ -308,6 +310,18 @@ the path parameter `name` will have the value `"world"`.
 $app->get('/hello/{name}', ['MyController', 'hello']);
 ```
 
+The `name` parameter will be passed as argument to the `hello` method.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello(string $name)
+    {
+        $this->output("Hello $name");
+    }
+}
+```
+
 #### Single request parameter
 
 The controller will pass PSR-7 request parameters as arguments. This is specified by an attribute
@@ -322,7 +336,6 @@ If the argument name is used as parameter name
 
 * for `QueryParam`, underscores are replaced with dashes. Eg: `$foo_bar` will translate to query param `foo-bar`.
 * for `Header`, words are capitalized and underscores become dashes. Eg: `$foo_bar` translates to header `Foo-Bar`.
-
 
 #### All request parameters
 
