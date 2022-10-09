@@ -5,6 +5,7 @@ namespace Jasny\Test\Controller\Traits;
 use Jasny\Controller\Controller;
 use Jasny\Test\Controller\InContextOf;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -149,11 +150,46 @@ class ContentNegotiationTest extends TestCase
         $request->expects($this->once())->method('getHeaderLine')->with('Accept-Charset')
             ->willReturn($accept);
 
-        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'header']);
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->once())->method('getHeaderLine')->with('Content-Type')
+            ->willReturn('');
+
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'getResponse', 'header']);
         $controller->method('getRequest')->willReturn($request);
+        $controller->method('getResponse')->willReturn($response);
         $controller->expects($this->never())->method('header');
 
         $result = $this->inContextOf($controller, fn() => $controller->negotiateCharset($priorities));
         $this->assertEquals($expected, $result);
+    }
+
+    public function charsetContentTypeProvider()
+    {
+        return [
+            ['text/html'],
+            ['text/html; charset=windows-1251']
+        ];
+    }
+    /**
+     * @dataProvider charsetContentTypeProvider
+     */
+    public function testNegotiateCharsetWithHeader(string $contentType)
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->expects($this->once())->method('getHeaderLine')->with('Accept-Charset')
+            ->willReturn('utf-8');
+
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->once())->method('getHeaderLine')->with('Content-Type')
+            ->willReturn($contentType);
+
+        $controller = $this->createPartialMock(Controller::class, ['getRequest', 'getResponse', 'header']);
+        $controller->method('getRequest')->willReturn($request);
+        $controller->method('getResponse')->willReturn($response);
+        $controller->expects($this->once())->method('header')
+            ->with('Content-Type', 'text/html; charset=utf-8');
+
+        $result = $this->inContextOf($controller, fn() => $controller->negotiateCharset(['utf-8', 'iso-8859-1;q=0.5']));
+        $this->assertEquals('utf-8', $result);
     }
 }

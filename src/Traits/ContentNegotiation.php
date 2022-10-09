@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 trait ContentNegotiation
 {
     abstract protected function getRequest(): ServerRequestInterface;
-    abstract protected function getResonse(): ResponseInterface;
+    abstract protected function getResponse(): ResponseInterface;
 
     abstract protected function header(string $header, string|int|\Stringable $value, bool $add = false): static;
 
@@ -79,7 +79,7 @@ trait ContentNegotiation
     {
         $charset = $this->negotiate(new CharsetNegotiator(), 'Accept-Charset', $priorities);
 
-        $contentType = $this->getResonse()->getHeaderLine('Content-Type');
+        $contentType = $this->getResponse()->getHeaderLine('Content-Type');
         if ($contentType !== '') {
             $contentType = preg_replace('/;\s*charset\s*=[^;]+/', '', $contentType)
                 . "; charset=$charset";
