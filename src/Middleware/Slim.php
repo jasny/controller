@@ -84,7 +84,10 @@ class Slim implements MiddlewareInterface
             case 403: throw new HttpForbiddenException($request, (string)$response->getBody() ?: null);
             case 404: throw new HttpNotFoundException($request, (string)$response->getBody() ?: null);
             case 405: throw new HttpMethodNotAllowedException($request, (string)$response->getBody() ?: null);
-            case 410: throw new HttpGoneException($request, (string)$response->getBody() ?: null);
+            case 410:
+                throw class_exists(HttpGoneException::class)
+                    ? new HttpGoneException($request, (string)$response->getBody() ?: null)
+                    : new HttpException($request, (string)$response->getBody() ?: null, $status);
             case 500: throw new HttpInternalServerErrorException($request, (string)$response->getBody() ?: null);
             case 501: throw new HttpNotImplementedException($request, (string)$response->getBody() ?: null);
         }
