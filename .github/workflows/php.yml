@@ -45,4 +45,4 @@ jobs:
       if: ${{ matrix.coverage }}
       uses: sudo-bot/action-scrutinizer@latest
       with:
-        coverage-file: /tmp/clover.xml
+        cli-args: "--format=php-clover /tmp/clover.xml"
