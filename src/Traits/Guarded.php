@@ -10,10 +10,10 @@ trait Guarded
 {
     protected Guardian $guardian;
 
-    abstract public function getRequest(): ServerRequestInterface;
-    abstract public function getResponse(): ResponseInterface;
+    abstract protected function getRequest(): ServerRequestInterface;
+    abstract protected function getResponse(): ResponseInterface;
 
-    protected function getGuardian(): Guardian
+    private function getGuardian(): Guardian
     {
         $this->guardian ??= new Guardian();
         return $this->guardian;

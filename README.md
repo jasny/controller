@@ -209,6 +209,7 @@ The following methods for setting the output status are available
 | [402][]                 | `paymentRequired()`                                            |                                                     |
 | [403][]                 | `forbidden()`                                                  |                                                     |
 | [404][]/[405][]/[410][] | `notFound(int $code = 404)`                                    |                                                     |
+| [406][]                 | `notAcceptable()`                                              |                                                     |
 | [409][]                 | `conflict()`                                                   |                                                     |
 | [429][]                 | `tooManyRequests()`                                            |                                                     |
 | [5xx][500]              | `error(int $code = 500)`                                       |                                                     |
@@ -232,6 +233,7 @@ The following methods for setting the output status are available
 [403]: https://httpstatuses.com/403
 [404]: https://httpstatuses.com/404
 [405]: https://httpstatuses.com/405
+[406]: https://httpstatuses.com/406
 [410]: https://httpstatuses.com/410
 [409]: https://httpstatuses.com/409
 [429]: https://httpstatuses.com/429
@@ -427,6 +429,54 @@ use Jasny\Controller\Parameter\SingleParameter;
 SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
 ```
 
+Content negotiation
+---
+
+Content negotiation allows the controller to give different output based on `Accept` request headers. It can be used to
+select the content type (switch between JSON and XML), the content language, encoding, and charset.
+
+| Method                   | Request header    | Response header    |    
+|--------------------------|-------------------|--------------------|
+| `negotiateContentType()` | `Accept`          | `Content-Type`     |
+| `negotiateLanguage()`    | `Accept-Language` | `Content-Language` | 
+| `negotiateEncoding()`    | `Accept-Encoding` | `Content-Encoding` | 
+| `negotiateCharset()`     | `Accept-Charset`  |                    |
+
+_`negotiateCharset()` will modify the `Content-Type` header if it's already set. Otherwise, it will just
+return the selected charset._
+
+The negotiate method takes a list or priorities as argument. It sets the response header and returns the selected
+option.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    public function hello()
+    {
+        $language = $this->negotiateLanguage(['en', 'de', 'fr', 'nl;q=0.6']);
+        
+        switch ($language) {
+            case 'en':
+                return $this->output('Good morning');
+            case 'de':
+                return $this->output('Guten Morgen');
+            case 'fr':
+                return $this->output('Bonjour');
+            case 'nl':
+                return $this->output('Goedemorgen');
+            default:
+                return $this
+                    ->notAcceptable()
+                    ->output("This content isn't available in your language");
+        }
+    }
+}
+```
+
+For more information, please check the documentation of the [willdurand/negotiation] library.
+
+[willdurand/negotiation]: https://github.com/willdurand/Negotiation
+
 Hooks
 ---
 
@@ -536,11 +586,12 @@ object. To utilize this, overwrite the `Guardian` class and register it to the c
 ```php
 use Jasny\Controller\Guardian;
 use Jasny\Controller\Guard;
+use DI\Container;
 
 return [
-    Guardian::class => function ($container) {
+    Guardian::class => function (Container $container) {
         return new class ($container) extends Guardian {
-            public function __construct(private $container) {}
+            public function __construct(private Container $container) {}
             
             public function instantiate(\ReflectionAttribute $attribute): Guard {
                 $guard = $attribute->newInstance();
@@ -568,7 +619,7 @@ class MyGuard extends Guard
 }
 ```
 
-Make sure the guardian is injected into the controller using dependency injection.
+Make sure the `Guardian` service is injected into the controller using dependency injection.
 
 ```php
 use Jasny\Controller\Controller;
@@ -577,7 +628,7 @@ use Jasny\Controller\Guardian;
 class MyController extends Controller
 {
     public function __construct(
-        private Guardian $guardian
+        protected Guardian $guardian
     ) {}
 }
 ```

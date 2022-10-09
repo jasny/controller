@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Jasny\Controller\Traits;
 
 use Negotiation\{AbstractNegotiator, Negotiator, LanguageNegotiator, EncodingNegotiator, CharsetNegotiator};
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -12,11 +13,12 @@ use Psr\Http\Message\ServerRequestInterface;
 trait ContentNegotiation
 {
     abstract protected function getRequest(): ServerRequestInterface;
+    abstract protected function getResonse(): ResponseInterface;
 
     abstract protected function header(string $header, string|int|\Stringable $value, bool $add = false): static;
 
     /**
-     * Pick best content type
+     * Pick the best content type
      *
      * @param string[] $priorities
      * @return string
@@ -33,7 +35,7 @@ trait ContentNegotiation
     }
 
     /**
-     * Pick best language and set the `Content-Language` header
+     * Pick the best language and set the `Content-Language` header
      *
      * @param string[] $priorities
      * @return string
@@ -50,7 +52,7 @@ trait ContentNegotiation
     }
 
     /**
-     * Pick best encoding and set `Content-Encoding` header
+     * Pick the best encoding and set `Content-Encoding` header
      *
      * @param string[] $priorities
      * @return string
@@ -67,15 +69,24 @@ trait ContentNegotiation
     }
 
     /**
-     * Pick best charset.
-     * This method only returns the charset and doesn't set any header.
+     * Pick the best charset.
+     * This method will modify the `Content-Type` header if it's set.
      *
      * @param string[] $priorities
      * @return string
      */
     protected function negotiateCharset(array $priorities): string
     {
-        return $this->negotiate(new CharsetNegotiator(), 'Accept-Charset', $priorities);
+        $charset = $this->negotiate(new CharsetNegotiator(), 'Accept-Charset', $priorities);
+
+        $contentType = $this->getResonse()->getHeaderLine('Content-Type');
+        if ($contentType !== '') {
+            $contentType = preg_replace('/;\s*charset\s*=[^;]+/', '', $contentType)
+                . "; charset=$charset";
+            $this->header('Content-Type', $contentType);
+        }
+
+        return $charset;
     }
 
     /**

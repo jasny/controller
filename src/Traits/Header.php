@@ -222,11 +222,21 @@ trait Header
      */
     protected function notFound(int $status = 404): static
     {
-        if ($status !== 404 && $status !== 405 && $status !== 406) {
+        if ($status !== 404 && $status !== 405 && $status !== 410) {
             throw new \DomainException("Invalid status code $status for no content response");
         }
 
         return $this->status($status);
+    }
+
+    /**
+     * Respond with 406 Not Acceptable
+     *
+     * @return $this
+     */
+    protected function notAcceptable(): static
+    {
+        return $this->status(406);
     }
 
     /**
