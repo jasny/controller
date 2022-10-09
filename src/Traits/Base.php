@@ -62,10 +62,12 @@ trait Base
             ) + [null];
             $attribute = $argRefl?->newInstance() ?? new PathParam();
 
+            $type = $param->getType();
+
             $args[] = $attribute->getValue(
                 $this->request,
                 $param->getName(),
-                $param->getType()?->getName(),
+                $type instanceof \ReflectionNamedType ? $type->getName() : null,
                 !$param->isOptional(),
             ) ?? $param->getDefaultValue();
         }

@@ -36,5 +36,14 @@
         "psr-4": {
             "Jasny\\Test\\Controller\\": "tests/"
         }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": [
+            "phpstan analyse",
+            "phpunit --testdox --colors=always",
+            "phpcs -p src"
+        ]
     }
 }

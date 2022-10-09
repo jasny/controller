@@ -79,21 +79,27 @@ class Slim implements MiddlewareInterface
         $status = $response->getStatusCode();
 
         switch ($status) {
-            case 400: throw new HttpBadRequestException($request, (string)$response->getBody() ?: null);
-            case 401: throw new HttpUnauthorizedException($request, (string)$response->getBody() ?: null);
-            case 403: throw new HttpForbiddenException($request, (string)$response->getBody() ?: null);
-            case 404: throw new HttpNotFoundException($request, (string)$response->getBody() ?: null);
-            case 405: throw new HttpMethodNotAllowedException($request, (string)$response->getBody() ?: null);
+            case 400: throw new HttpBadRequestException($request, $this->getBody($response));
+            case 401: throw new HttpUnauthorizedException($request, $this->getBody($response));
+            case 403: throw new HttpForbiddenException($request, $this->getBody($response));
+            case 404: throw new HttpNotFoundException($request, $this->getBody($response));
+            case 405: throw new HttpMethodNotAllowedException($request, $this->getBody($response));
             case 410:
                 throw class_exists(HttpGoneException::class)
-                    ? new HttpGoneException($request, (string)$response->getBody() ?: null)
-                    : new HttpException($request, (string)$response->getBody() ?: null, $status);
-            case 500: throw new HttpInternalServerErrorException($request, (string)$response->getBody() ?: null);
-            case 501: throw new HttpNotImplementedException($request, (string)$response->getBody() ?: null);
+                    ? new HttpGoneException($request, $this->getBody($response))
+                    : new HttpException($request, $this->getBody($response), $status);
+            case 500: throw new HttpInternalServerErrorException($request, $this->getBody($response));
+            case 501: throw new HttpNotImplementedException($request, $this->getBody($response));
         }
 
         if ($status >= 400) {
-            throw new HttpException($request, (string)$response->getBody() ?: null, $status);
+            throw new HttpException($request, $this->getBody($response), $status);
         }
+    }
+
+    protected function getBody(ResponseInterface $response): string|null
+    {
+        $body = (string)$response->getBody();
+        return $body !== '' ? $body : null;
     }
 }

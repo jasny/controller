@@ -32,7 +32,7 @@ abstract class Controller
      * }
      * </code>
      *
-     * @return void|ResponseInterface|static
+     * @return void|null|ResponseInterface|static
      */
     protected function before()
     {
@@ -42,7 +42,7 @@ abstract class Controller
      * Called after executing the action.
      * @codeCoverageIgnore
      *
-     * @return void|ResponseInterface|static
+     * @return void|null|ResponseInterface|static
      */
     protected function after()
     {

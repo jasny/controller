@@ -4,7 +4,6 @@ namespace Jasny\Controller\Parameter;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-#[\Attribute]
 interface Parameter
 {
     /**

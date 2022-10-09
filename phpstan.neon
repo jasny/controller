@@ -1,0 +1,9 @@
+parameters:
+    level: 3
+    paths:
+        - src
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - "/^Abstract class .+ cannot be an Attribute class/"
+includes:
+  	- vendor/phpstan/phpstan-strict-rules/rules.neon
