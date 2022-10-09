@@ -1,9 +1,12 @@
 parameters:
-    level: 3
+    level: 5
     paths:
         - src
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
-        - "/^Abstract class .+ cannot be an Attribute class/"
+        - "/Abstract class .+ cannot be an Attribute class/"
+        - path: src/Traits/CheckResponse.php
+          message: "/Short ternary operator is not allowed/"
+        - "/Call to an undefined method Negotiation\\\\AcceptHeader::getType/"
 includes:
   	- vendor/phpstan/phpstan-strict-rules/rules.neon

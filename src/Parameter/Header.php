@@ -11,8 +11,12 @@ class Header extends SingleParameter
     /**
      * Get request header.
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? $this->convertNameToHeader($name);
         $value = $request->getHeaderLine($key);
 

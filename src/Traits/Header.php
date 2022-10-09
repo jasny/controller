@@ -82,7 +82,7 @@ trait Header
     {
         $this->status(201);
 
-        if (!empty($location)) {
+        if ($location !== null && $location !== '') {
             $this->header('Location', $location);
         }
 
@@ -133,6 +133,7 @@ trait Header
      *
      * @param string     $url
      * @param int|string $status  301 (Moved Permanently), 302 (Found), 303 (See Other) or 307 (Temporary Redirect)
+     * @return $this
      */
     protected function redirect(string $url, int|string $status = 303): static
     {
@@ -155,7 +156,8 @@ trait Header
      */
     protected function back(): static
     {
-        return $this->redirect($this->getLocalReferer() ?: '/');
+        $referer = $this->getLocalReferer();
+        return $this->redirect($referer !== null ? $referer : '/');
     }
 
     /**
@@ -274,5 +276,4 @@ trait Header
 
         return $this->status($status);
     }
-
 }

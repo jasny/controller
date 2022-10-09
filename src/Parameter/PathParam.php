@@ -11,8 +11,12 @@ class PathParam extends SingleParameter
     /**
      * Get request path parameter.
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? $name;
         $value = $request->getAttribute('route:{' . $key . '}');
 

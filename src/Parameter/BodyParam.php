@@ -14,8 +14,12 @@ class BodyParam extends SingleParameter
      * Optionally apply filtering to the value.
      * @link http://php.net/manual/en/filter.filters.php
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? $name;
         $params = $request->getParsedBody();
 

@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace Jasny\Controller\Traits;
 
-use Negotiation\{AbstractNegotiator, Negotiator, LanguageNegotiator, EncodingNegotiator, CharsetNegotiator};
+use Negotiation\AbstractNegotiator;
+use Negotiation\Negotiator;
+use Negotiation\LanguageNegotiator;
+use Negotiation\EncodingNegotiator;
+use Negotiation\CharsetNegotiator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -97,6 +101,6 @@ trait ContentNegotiation
         $value = $this->getRequest()->getHeaderLine($header);
         $chosen = $negotiator->getBest($value, $priorities);
 
-        return $chosen ? $chosen->getType() : '';
+        return $chosen !== null ? $chosen->getType() : '';
     }
 }

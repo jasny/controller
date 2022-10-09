@@ -21,7 +21,7 @@ trait Base
     protected function getRequest(): ServerRequestInterface
     {
         if (!isset($this->request)) {
-            throw new \LogicException("Request not set, " . __CLASS__ . " has not been invoked"); // @codeCoverageIgnore
+            throw new \LogicException("Request not set " . __CLASS__ . " has not been invoked"); // @codeCoverageIgnore
         }
 
         return $this->request;
@@ -33,7 +33,7 @@ trait Base
     protected function getResponse(): ResponseInterface
     {
         if (!isset($this->response)) {
-            throw new \LogicException("Response not set, " . __CLASS__ . " has not been invoked"); // @codeCoverageIgnore
+            throw new \LogicException("Response not set " . __CLASS__ . " has not been invoked"); // @codeCoverageIgnore
         }
 
         return $this->response;

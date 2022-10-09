@@ -9,10 +9,14 @@ use Psr\Http\Message\ServerRequestInterface;
 class Attr extends SingleParameter
 {
     /**
-     * Get a cookie parameter.
+     * Get a request attribute.
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? $name;
         $value = $request->getAttribute($key);
 

@@ -27,7 +27,8 @@ class Slim implements MiddlewareInterface
      * @param bool $useSlimErrors  Throw Slim exceptions for error responses.
      */
     public function __construct(public bool $useSlimErrors = false)
-    { }
+    {
+    }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -51,8 +52,7 @@ class Slim implements MiddlewareInterface
     {
         $callable = $route->getCallable();
 
-        if (
-            is_array($callable) &&
+        if (is_array($callable) &&
             is_a($callable[0], Controller::class, true) &&
             isset($callable[1]) &&
             $callable[1] !== '__invoke'
@@ -79,17 +79,24 @@ class Slim implements MiddlewareInterface
         $status = $response->getStatusCode();
 
         switch ($status) {
-            case 400: throw new HttpBadRequestException($request, $this->getBody($response));
-            case 401: throw new HttpUnauthorizedException($request, $this->getBody($response));
-            case 403: throw new HttpForbiddenException($request, $this->getBody($response));
-            case 404: throw new HttpNotFoundException($request, $this->getBody($response));
-            case 405: throw new HttpMethodNotAllowedException($request, $this->getBody($response));
+            case 400:
+                throw new HttpBadRequestException($request, $this->getBody($response));
+            case 401:
+                throw new HttpUnauthorizedException($request, $this->getBody($response));
+            case 403:
+                throw new HttpForbiddenException($request, $this->getBody($response));
+            case 404:
+                throw new HttpNotFoundException($request, $this->getBody($response));
+            case 405:
+                throw new HttpMethodNotAllowedException($request, $this->getBody($response));
             case 410:
                 throw class_exists(HttpGoneException::class)
                     ? new HttpGoneException($request, $this->getBody($response))
                     : new HttpException($request, $this->getBody($response), $status);
-            case 500: throw new HttpInternalServerErrorException($request, $this->getBody($response));
-            case 501: throw new HttpNotImplementedException($request, $this->getBody($response));
+            case 500:
+                throw new HttpInternalServerErrorException($request, $this->getBody($response));
+            case 501:
+                throw new HttpNotImplementedException($request, $this->getBody($response));
         }
 
         if ($status >= 400) {

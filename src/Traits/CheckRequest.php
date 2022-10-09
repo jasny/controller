@@ -63,6 +63,6 @@ trait CheckRequest
         $referer = $request->getHeaderLine('Referer');
         $host = $request->getHeaderLine('Host');
 
-        return $referer && parse_url($referer, PHP_URL_HOST) === $host ? $referer : null;
+        return $referer !== '' && parse_url($referer, PHP_URL_HOST) === $host ? $referer : null;
     }
 }

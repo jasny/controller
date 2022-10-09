@@ -16,8 +16,12 @@ class UploadedFile extends SingleParameter
     /**
      * Get uploaded file from request.
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? $name;
         $params = $request->getUploadedFiles();
 

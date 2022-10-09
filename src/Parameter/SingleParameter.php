@@ -4,7 +4,7 @@ namespace Jasny\Controller\Parameter;
 
 abstract class SingleParameter implements Parameter
 {
-    static public array $types = [
+    public static array $types = [
         'bool' => [FILTER_VALIDATE_BOOL],
         'int' => [FILTER_VALIDATE_INT],
         'float' => [FILTER_VALIDATE_FLOAT],

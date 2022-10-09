@@ -11,8 +11,12 @@ class QueryParam extends SingleParameter
     /**
      * Get a query parameter.
      */
-    public function getValue(ServerRequestInterface $request, string $name, ?string $type, bool $required = false): mixed
-    {
+    public function getValue(
+        ServerRequestInterface $request,
+        string $name,
+        ?string $type,
+        bool $required = false
+    ): mixed {
         $key = $this->key ?? str_replace('_', '-', $name);
         $params = $request->getQueryParams();
 
