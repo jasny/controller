@@ -24,6 +24,7 @@
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "jasny/php-code-quality": "^2.7",
+        "phpunit/phpunit": "^9.5",
         "slim/slim": "4.*",
         "slim/psr7": "^1.5"
     },

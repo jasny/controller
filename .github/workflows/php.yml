@@ -36,7 +36,7 @@ jobs:
       run: composer validate
 
     - name: Install dependencies
-      run: composer update --prefer-dist --no-progress --no-suggest ${{ matrix.composer }}
+      run: composer update --prefer-dist --no-progress ${{ matrix.composer }}
 
     - name: Run PHPUnit
       run: vendor/bin/phpunit ${{ matrix.coverage }}

@@ -149,7 +149,7 @@ class SlimTest extends TestCase
             'Forbidden' => [403, HttpForbiddenException::class],
             'Not Found' => [404, HttpNotFoundException::class],
             'Method Not Allowed' => [405, HttpMethodNotAllowedException::class],
-            'Gone' => [410, HttpGoneException::class],
+            'Gone' => [410, class_exists(HttpGoneException::class) ? HttpGoneException::class : HttpException::class],
             'Internal Server Error' => [500, HttpInternalServerErrorException::class],
             'Not Implemented' => [501, HttpNotImplementedException::class],
             'Payment Request' => [402, HttpException::class],
