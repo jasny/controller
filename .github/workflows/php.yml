@@ -23,6 +23,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 10
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -41,6 +43,4 @@ jobs:
 
     - name: Upload coverage to Scrutinizer
       if: ${{ matrix.coverage }}
-      run: >
-        wget https://scrutinizer-ci.com/ocular.phar -O "/tmp/ocular.phar" &&
-        php "/tmp/ocular.phar" code-coverage:upload --format=php-clover /tmp/clover.xml
+      uses: sudo-bot/action-scrutinizer@latest
