@@ -44,3 +44,5 @@ jobs:
     - name: Upload coverage to Scrutinizer
       if: ${{ matrix.coverage }}
       uses: sudo-bot/action-scrutinizer@latest
+      with:
+        coverage-file: /tmp/clover.xml
