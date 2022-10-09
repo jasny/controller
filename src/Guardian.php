@@ -14,7 +14,7 @@ class Guardian
     /**
      * Instantiate a guard from an attribute.
      */
-    protected function instantiateGuard(\ReflectionAttribute $attribute): Guard
+    protected function instantiate(\ReflectionAttribute $attribute): Guard
     {
         return $attribute->newInstance();
     }
@@ -30,7 +30,7 @@ class Guardian
         $attributes = $subject->getAttributes(Guard::class, \ReflectionAttribute::IS_INSTANCEOF);
 
         foreach ($attributes as $attribute) {
-            $guard = $this->instantiateGuard($attribute);
+            $guard = $this->instantiate($attribute);
             $result = $guard($request, $response);
 
             if ($result !== null) {

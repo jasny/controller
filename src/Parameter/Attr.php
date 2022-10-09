@@ -6,7 +6,7 @@ use Jasny\Controller\ParameterException;
 use Psr\Http\Message\ServerRequestInterface;
 
 #[\Attribute]
-class Attribute extends SingleParameter
+class Attr extends SingleParameter
 {
     /**
      * Get a cookie parameter.

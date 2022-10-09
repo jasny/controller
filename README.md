@@ -26,7 +26,6 @@ Setup
 `Jasny\Controller` can be used as a base class for each of your controllers. It lets you interact with the
 [PSR-7](http://www.php-fig.org/psr/psr-7/) server request and response in a friendly matter.
 
-
 ```php
 class MyController extends Jasny\Controller\Controller
 {
@@ -293,7 +292,7 @@ available through the server request object. This is done using [PHP attributes]
 | UploadedFiles |            | Associative array of all uploaded files   |
 | Header        | name, type | Request header (as string)                |
 | Headers       |            | All headers as associative array          |     
-| Attribute     | name, type | PSR-7 request attribute set by middleware |
+| Attr          | name, type | PSR-7 request attribute set by middleware |
 
 [PHP attributes]: https://www.php.net/manual/en/language.attributes.overview.php
 
@@ -353,7 +352,7 @@ argument will be the parsed body. In case of a string it will be the raw body.
 #### PSR-7 request attribute
 
 Middleware can set attributes of the PSR-7 request. These request attributes are available as arguments by using the
-`Attribute` attribute.
+`Attr` attribute.
 
 ### Parameter name
 
@@ -361,12 +360,13 @@ For single parameters, the name of the argument will be used as parameter name. 
 a name when defining the attribute.
 
 ```php
+use Jasny\Controller\Controller;
 use Jasny\Controller\Parameter\PathParam;
 use Jasny\Controller\Parameter\QueryParam;
 
-class MyController extends Jasny\Controller\Controller
+class MyController extends Controller
 {
-    public function hello(#[PathParam] string $name, #[QueryParam('and')] string $other = ''): void
+    public function hello(#[PathParam] string $name, #[QueryParam('and')] string $other = '')
     {
         $this->output("Hello $name" . ($other ? " and $other" : ""));
     }
@@ -381,11 +381,12 @@ It's possible to specify a type as second argument when defining the attribute. 
 the type of the argument.
 
 ```php
+use Jasny\Controller\Controller;
 use Jasny\Controller\Parameter\BodyParam;
 
-class MyController extends Jasny\Controller\Controller
+class MyController extends Controller
 {
-    public function send(#[BodyParam(type: 'email')] string $emailAddress): void
+    public function send(#[BodyParam(type: 'email')] string $emailAddress)
     {
         // ...
     }
@@ -406,11 +407,12 @@ filters are defined
 For other types (like `string`), no filter is applied.
 
 ```php
+use Jasny\Controller\Controller;
 use Jasny\Controller\Parameter\PostParam;
 
-class MyController extends Jasny\Controller\Controller
+class MyController extends Controller
 {
-    public function message(#[PostParam(type: 'email')] array $email): void
+    public function message(#[PostParam(type: 'email')] array $email)
     {
         // ...
     }
@@ -424,3 +426,160 @@ use Jasny\Controller\Parameter\SingleParameter;
 
 SingleParameter::$types['slug'] = [FILTER_VALIDATE_REGEXP, '/^[a-z\-]+$/'];
 ```
+
+Hooks
+---
+
+In addition to the action method, the controller will also call the `before()` and `after()` method.
+
+### Before
+
+The `before()` method is call prior to the action method. If it returns a response, the method action is never called.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    protected function before()
+    {
+        if ($this->auth->getUser()->getCredits() <= 0) {
+            return $this->paymentRequired()->output("Sorry, you're out of credits");
+        }
+    }
+
+    // ...
+}
+```
+
+_Instead of `before()` consider using guards._
+
+### After
+
+The `after()` method is called after the action, regardless of the action response type.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    // ...
+    
+    protected function after()
+    {
+        $this->header('X-Available-Credits', $this->auth->getUser()->getCredits());
+    }
+}
+```
+
+Guards
+---
+
+Guards are [PHP Attributes] that are invoked before the controller method is called. A guard is similar to middleware,
+though more limited. The purpose of using a guard is to check if the controller action may be executed. If the guard
+returns a response, that response is emitted and the method on the controller is never called.
+
+```php
+class MyController extends Jasny\Controller\Controller
+{
+    #[MustBeLoggedIn]
+    public function send()
+    {
+        // ...
+    }
+}
+```
+
+A guard class should implement the `process` method. A guard class has the same methods as a controller class. The
+`process` method can have input parameters.
+
+```php
+use Jasny\Controller\Guard;
+use Jasny\Controller\Parameter\Attr;
+
+#[\Attribute]
+class MustBeLoggedIn extends Guard
+{
+    public function process(#[Attr] User? $sessionUser)
+    {
+        if ($sessionUser === null) {
+            return $this->forbidden()->output("Not logged in");
+        }
+    }
+}
+```
+
+### Order or execution
+
+Guards may be defined on the controller class or the action method. The order of execution is
+
+* Class guards
+* `before()`
+* Method guards
+* Action
+* `after()`
+
+### Dependency injection
+
+Guards are attributes, which are [instantiated using PHP reflection]. Parameters can be specified when the guard is
+declared.
+
+```php
+#[MinimalCredits(value: 20)]
+class MyController extends \Jasny\Controller\Controller
+{
+    // ...
+}
+```
+
+This makes it difficult to make a service (like a DB connection) available to a guard using dependency injection.
+
+Some DI container libraries, like [PHP-DI](https://php-di.org/), are able to inject services to an already instantiated
+object. To utilize this, overwrite the `Guardian` class and register it to the container.
+
+```php
+use Jasny\Controller\Guardian;
+use Jasny\Controller\Guard;
+
+return [
+    Guardian::class => function ($container) {
+        return new class ($container) extends Guardian {
+            public function __construct(private $container) {}
+            
+            public function instantiate(\ReflectionAttribute $attribute): Guard {
+                $guard = $attribute->newInstance();
+                $this->container->injectOn($guard);
+                
+                return $guard;
+            }
+        } 
+    }
+];
+```
+
+The guard class can use `#[Inject]` attributes or `@Inject` annotations.
+
+```php
+use Jasny\Controller\Guard;
+use DI\Attribute\Inject;
+
+class MyGuard extends Guard
+{
+    #[Inject]
+    private DBConnection $db;
+    
+    // ...
+}
+```
+
+Make sure the guardian is injected into the controller using dependency injection.
+
+```php
+use Jasny\Controller\Controller;
+use Jasny\Controller\Guardian;
+
+class MyController extends Controller
+{
+    public function __construct(
+        private Guardian $guardian
+    ) {}
+}
+```
+
+[instantiated using PHP reflection]: https://www.php.net/manual/en/language.attributes.reflection.php

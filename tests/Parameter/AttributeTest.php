@@ -2,13 +2,13 @@
 
 namespace Jasny\Test\Controller\Parameter;
 
-use Jasny\Controller\Parameter\Attribute;
+use Jasny\Controller\Parameter\Attr;
 use Jasny\Controller\ParameterException;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * @covers \Jasny\Controller\Parameter\Attribute
+ * @covers \Jasny\Controller\Parameter\Attr
  * @covers \Jasny\Controller\Parameter\SingleParameter
  */
 class AttributeTest extends TestCase
@@ -28,7 +28,7 @@ class AttributeTest extends TestCase
      */
     public function test($consKey, $consType, $name, $type, $Attribute, $expected)
     {
-        $parameter = new Attribute($consKey, $consType);
+        $parameter = new Attr($consKey, $consType);
 
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->once())->method('getAttribute')
@@ -41,7 +41,7 @@ class AttributeTest extends TestCase
 
     public function testMissingOptional()
     {
-        $parameter = new Attribute();
+        $parameter = new Attr();
 
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->once())->method('getAttribute')
@@ -55,7 +55,7 @@ class AttributeTest extends TestCase
 
     public function testMissingRequired()
     {
-        $parameter = new Attribute();
+        $parameter = new Attr();
 
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->once())->method('getAttribute')
@@ -73,6 +73,6 @@ class AttributeTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage("Undefined parameter type 'big'");
 
-        new Attribute('foo', 'big');
+        new Attr('foo', 'big');
     }
 }
