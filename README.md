@@ -282,20 +282,20 @@ Input
 With PSR-7, you shouldn't use super globals `$_GET`, `$_POST`, `$_COOKIE`, and `$_SERVER`. Instead, these values are
 available through the server request object. This is done using [PHP attributes][].
 
-| Attribute     | Arguments  |                                           |
-|---------------|------------|-------------------------------------------|
-| PathParam     | name, type | Path parameter obtained from router       |
-| QueryParam    | name, type | Query parameter                           |
-| Query         |            | All query parameters                      |
-| BodyParam     | name, type | Body parameter                            |
-| Body          |            | All body parameters or raw body as string |
-| Cookie        | name, type | Cookie parameter                          |
-| Cookies       |            | All cookies as key/value                  |
-| UploadedFile  | name       | PSR-7 uploaded file(s)                    |
-| UploadedFiles |            | Associative array of all uploaded files   |
-| Header        | name, type | Request header (as string)                |
-| Headers       |            | All headers as associative array          |     
-| Attr          | name, type | PSR-7 request attribute set by middleware |
+| Attribute       | Arguments  |                                           |
+|-----------------|------------|-------------------------------------------|
+| `PathParam`     | name, type | Path parameter obtained from router       |
+| `QueryParam`    | name, type | Query parameter                           |
+| `Query`         |            | All query parameters                      |
+| `BodyParam`     | name, type | Body parameter                            |
+| `Body`          |            | All body parameters or raw body as string |
+| `Cookie`        | name, type | Cookie parameter                          |
+| `Cookies`       |            | All cookies as key/value                  |
+| `UploadedFile`  | name       | PSR-7 uploaded file(s)                    |
+| `UploadedFiles` |            | Associative array of all uploaded files   |
+| `Header`        | name, type | Request header (as string)                |
+| `Headers`       |            | All headers as associative array          |     
+| `Attr`          | name, type | PSR-7 request attribute set by middleware |
 
 [PHP attributes]: https://www.php.net/manual/en/language.attributes.overview.php
 
@@ -399,13 +399,13 @@ class MyController extends Controller
 Parameter attributes use the [`filter_var`](https://www.php.net/filter_var) function to sanitize input. The following
 filters are defined
 
-| type  | filter                |
-|-------|-----------------------|
-| bool  | FILTER_VALIDATE_BOOL  |
-| int   | FILTER_VALIDATE_INT   |
-| float | FILTER_VALIDATE_FLOAT |
-| email | FILTER_VALIDATE_EMAIL |
-| url   | FILTER_VALIDATE_URL   |
+| type  | filter                  |
+|-------|-------------------------|
+| bool  | `FILTER_VALIDATE_BOOL`  |
+| int   | `FILTER_VALIDATE_INT`   |
+| float | `FILTER_VALIDATE_FLOAT` |
+| email | `FILTER_VALIDATE_EMAIL` |
+| url   | `FILTER_VALIDATE_URL`   |
 
 For other types (like `string`), no filter is applied.
 
