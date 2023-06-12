@@ -1,13 +1,13 @@
 {
     "name": "jasny/controller",
-    "description": "A general controller for PSR-7",
-    "keywords": ["MVC", "controller"],
+    "description": "Controller for Slim and other micro-frameworks",
+    "keywords": ["MVC", "controller", "psr-7", "slim"],
     "license": "MIT",
     "authors": [
         {
             "name": "Arnold Daniels",
             "email": "arnold@jasny.net",
-            "homepage": "http://www.jasny.net"
+            "homepage": "https://www.jasny.net"
         }
     ],
     "support": {
@@ -17,9 +17,9 @@
     "require": {
         "php": ">=8.0.0",
         "psr/http-message": "^1.0",
+        "psr/http-server-middleware": "^1.0",
         "willdurand/negotiation": "^3.1",
-        "ralouphie/mimey": "^1.0",
-        "psr/http-server-middleware": "^1.0"
+        "ralouphie/mimey": "^1.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",

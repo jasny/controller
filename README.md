@@ -7,9 +7,9 @@ Jasny Controller
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/controller.svg)](https://packagist.org/packages/jasny/controller)
 
-A general purpose controller for PSR-7
+PSR-7 controller for [Slim Framework](https://www.slimframework.com/) and other micro-frameworks.
 
-**The controller is responsible handling the HTTP request, manipulate the model and initiate the view.**
+> The controller is responsible handling the HTTP request, manipulate the model and initiate the view.
 
 The code in the controller read as a high level description of each action. The controller should not contain
 implementation details. This belongs in the model, view or in services and libraries.
@@ -50,28 +50,9 @@ for extracting parameters from the url path and possibly choosing a method to ca
 
 [`__invoke`]: http://php.net/manual/en/language.oop5.magic.php#object.invoke
 
-### SwitchRoute
-
-This library works with [SwitchRoute](https://github.com/jasny/switch-route), a super-fast router based on generating
-code. The router needs a PSR-15 request handler to work with PRS-7 server requests, like [Relay](https://relayphp.com/).
-
-By default, the route action is converted to the method that will be called by the PSR-15 handler. For this library,
-`__invoke` should be called instead. The invoke method will take care of calling the right method within the controller.
-
-```php
-$stud = fn($str) => strtr(ucwords($str, '-'), ['-' => '']);
-
-$invoker = new Invoker(fn (?string $controller, ?string $action) => [
-    $controller !== null ? $stud($controller) . 'Controller' : $stud($action) . 'Action',
-    '__invoke'
-]);
-```
-
-**[See SwitchRoute for more information](https://github.com/jasny/switch-route#readme)**
-
 ### Slim framework
 
-[Slim](https://www.slimframework.com/) is a PHP micro framework that works with PSR-7. To use this library with slim,
+[Slim](https://www.slimframework.com/) is a PHP micro-framework that works with PSR-7. To use this library with slim,
 use the provided middleware.
 
 ```php
@@ -99,6 +80,25 @@ $app->add(new ControllerMiddleware(true));
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 ```
+
+### Relay + SwitchRoute
+
+[SwitchRoute](https://github.com/jasny/switch-route), a super-fast router based on generating code. The router needs a
+PSR-15 request handler to work with PRS-7 server requests, like [Relay](https://relayphp.com/).
+
+By default, the route action is converted to the method that will be called by the PSR-15 handler. For this library,
+`__invoke` should be called instead. The invoke method will take care of calling the right method within the controller.
+
+```php
+$stud = fn($str) => strtr(ucwords($str, '-'), ['-' => '']);
+
+$invoker = new Invoker(fn (?string $controller, ?string $action) => [
+    $controller !== null ? $stud($controller) . 'Controller' : $stud($action) . 'Action',
+    '__invoke'
+]);
+```
+
+**[See SwitchRoute for more information](https://github.com/jasny/switch-route#readme)**
 
 Output
 ---
@@ -556,7 +556,7 @@ class MustBeLoggedIn extends Guard
 }
 ```
 
-### Order or execution
+### Order of execution
 
 Guards may be defined on the controller class or the action method. The order of execution is
 
